@@ -50,6 +50,7 @@ export async function PATCH(
 
   const body = await request.json()
   // Proteger campos de genealogía — no se editan directamente
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { madre_id: _m, padre_id: _p, ...updateData } = body
 
   const { data, error } = await supabase

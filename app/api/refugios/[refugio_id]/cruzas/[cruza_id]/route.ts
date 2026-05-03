@@ -1,20 +1,6 @@
 import { createClient } from "@/src/lib/supabase/server"
 import { NextResponse } from "next/server"
 
-async function getAncestros(supabase: ReturnType<typeof createClient>, id: string, generaciones = 3): Promise<unknown[]> {
-  if (generaciones === 0) return []
-  const { data } = await supabase
-    .from("ajolotes")
-    .select("id, codigo, nombre, sexo, madre_id, padre_id")
-    .eq("id", id)
-    .single()
-  if (!data) return []
-  const [madreAnc, padreAnc] = await Promise.all([
-    data.madre_id ? getAncestros(supabase, data.madre_id, generaciones - 1) : [],
-    data.padre_id ? getAncestros(supabase, data.padre_id, generaciones - 1) : [],
-  ])
-  return [{ ...data, madre: madreAnc[0] ?? null, padre: padreAnc[0] ?? null }]
-}
 
 export async function GET(
   _request: Request,
