@@ -133,7 +133,7 @@ export function InviteClient() {
         animateOtp(input, { scale: [1, 1.12, 0.95, 1] }, { duration: 0.35, delay: i * 0.04, ease: "easeOut" })
       })
     }
-  }, [otpState, animateOtp])
+  }, [otpState, animateOtp, otpRef])
 
   // ── OTP handlers ─────────────────────────────────────────────────────────────
 

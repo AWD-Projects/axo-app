@@ -1,3 +1,5 @@
+"use client"
+
 import { Search } from "lucide-react"
 import { ErrorPage } from "@/components/ui/error-page"
 

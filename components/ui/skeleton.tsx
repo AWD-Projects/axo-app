@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { Logo } from "@/components/Logo"
 
 // ── Skeleton primitive ────────────────────────────────────────────────────────
 
@@ -115,12 +116,7 @@ export function AppSplash({ message = "Cargando tu refugio..." }: AppSplashProps
       className="fixed inset-0 flex flex-col items-center justify-center"
       style={{ backgroundColor: "#f9f9f7" }}
     >
-      <span
-        className="text-[28px] font-medium"
-        style={{ fontFamily: "var(--font-dm-sans), DM Sans, sans-serif", color: "#0d0d0d" }}
-      >
-        A<span style={{ color: "#1a6560" }}>x</span>o
-      </span>
+      <Logo variant="teal" size="lg" />
 
       <div
         className="overflow-hidden rounded-[2px]"
