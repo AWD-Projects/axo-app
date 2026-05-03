@@ -1,53 +1,45 @@
 import { createClient } from "@/src/lib/supabase/server"
 import { NextResponse } from "next/server"
 
-
 export async function GET(
   _request: Request,
-  { params }: { params: { refugio_id: string; cruza_id: string } }
+  { params }: { params: { refugio_id: string; puesta_id: string } }
 ) {
   const supabase = createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
 
-  const { data: cruza, error } = await supabase
-    .from("cruzas")
-    .select(`
-      *,
-      hembra:hembra_id(id, codigo, nombre, madre_id, padre_id),
-      macho:macho_id(id, codigo, nombre, madre_id, padre_id),
-      estanques(id, nombre),
-      puestas(*)
-    `)
-    .eq("id", params.cruza_id)
+  const { data, error } = await supabase
+    .from("puestas")
+    .select("*, cruzas(id, estado, hembra_id, macho_id), lotes_larvales(id, codigo, etapa, cantidad_actual)")
+    .eq("id", params.puesta_id)
     .eq("refugio_id", params.refugio_id)
     .single()
 
-  if (error || !cruza) return NextResponse.json({ error: "Cruza no encontrada" }, { status: 404 })
-
-  return NextResponse.json({ data: cruza })
+  if (error || !data) return NextResponse.json({ error: "Puesta no encontrada" }, { status: 404 })
+  return NextResponse.json({ data })
 }
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { refugio_id: string; cruza_id: string } }
+  { params }: { params: { refugio_id: string; puesta_id: string } }
 ) {
   const supabase = createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
 
-  const body = await request.json()
+  const { fecha_puesta, cantidad_huevos, fecha_eclosion, cantidad_eclosionada, notas } = await request.json()
 
   const { data, error } = await supabase
-    .from("cruzas")
+    .from("puestas")
     .update({
-      ...(body.estado !== undefined && { estado: body.estado }),
-      ...(body.fecha_inicio !== undefined && { fecha_inicio: body.fecha_inicio }),
-      ...(body.fecha_fin !== undefined && { fecha_fin: body.fecha_fin }),
-      ...(body.aprobado_por !== undefined && { aprobado_por: body.aprobado_por }),
-      ...(body.notas !== undefined && { notas: body.notas }),
+      ...(fecha_puesta !== undefined && { fecha_puesta }),
+      ...(cantidad_huevos !== undefined && { cantidad_huevos }),
+      ...(fecha_eclosion !== undefined && { fecha_eclosion }),
+      ...(cantidad_eclosionada !== undefined && { cantidad_eclosionada }),
+      ...(notas !== undefined && { notas }),
     })
-    .eq("id", params.cruza_id)
+    .eq("id", params.puesta_id)
     .eq("refugio_id", params.refugio_id)
     .select()
     .single()
@@ -58,26 +50,26 @@ export async function PATCH(
 
 export async function DELETE(
   _request: Request,
-  { params }: { params: { refugio_id: string; cruza_id: string } }
+  { params }: { params: { refugio_id: string; puesta_id: string } }
 ) {
   const supabase = createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
 
-  const { data: cruza } = await supabase
-    .from("cruzas")
-    .select("estado")
-    .eq("id", params.cruza_id)
+  const { data: puesta } = await supabase
+    .from("puestas")
+    .select("lote_id")
+    .eq("id", params.puesta_id)
     .eq("refugio_id", params.refugio_id)
     .single()
 
-  if (!cruza) return NextResponse.json({ error: "Cruza no encontrada" }, { status: 404 })
-  if (cruza.estado === "activa") return NextResponse.json({ error: "No se puede eliminar una cruza activa" }, { status: 400 })
+  if (!puesta) return NextResponse.json({ error: "Puesta no encontrada" }, { status: 404 })
+  if (puesta.lote_id) return NextResponse.json({ error: "No se puede eliminar una puesta con lote larval asociado" }, { status: 400 })
 
   const { error } = await supabase
-    .from("cruzas")
+    .from("puestas")
     .delete()
-    .eq("id", params.cruza_id)
+    .eq("id", params.puesta_id)
     .eq("refugio_id", params.refugio_id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
