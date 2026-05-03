@@ -38,6 +38,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url))
   }
 
+  // Redirect to onboarding if logged in but has no refugio yet
+  if (session && pathname === "/dashboard") {
+    const { count } = await supabase
+      .from("refugio_usuarios")
+      .select("*", { count: "exact", head: true })
+      .eq("usuario_id", session.user.id)
+      .eq("activo", true)
+    if (count === 0) {
+      return NextResponse.redirect(new URL("/onboarding", request.url))
+    }
+  }
+
   return response
 }
 

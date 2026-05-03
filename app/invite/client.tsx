@@ -251,7 +251,8 @@ export function InviteClient() {
       </motion.div>
 
       {/* ── Right column ── */}
-      <div className="flex-1 flex items-center justify-center px-6 py-10 lg:px-16" style={{ backgroundColor: "#f9f9f7" }}>
+      <div className="flex-1 overflow-y-auto" style={{ backgroundColor: "#f9f9f7" }}>
+        <div className="min-h-full flex items-center justify-center px-6 py-10 lg:px-16">
         <div className="w-full max-w-[400px]">
           {/* Mobile: logo + refuge name */}
           <div className="flex flex-col items-center gap-1 mb-8 lg:hidden">
@@ -335,12 +336,10 @@ export function InviteClient() {
                         onPaste={handlePaste}
                         onFocus={() => setFocusedIdx(i)}
                         onBlur={() => setFocusedIdx(null)}
-                        className="w-full text-center transition-all duration-150 disabled:cursor-not-allowed"
+                        className="w-full h-[52px] sm:h-[60px] text-[20px] sm:text-[24px] text-center transition-all duration-150 disabled:cursor-not-allowed"
                         style={{
-                          height: "60px",
                           borderRadius: "8px",
                           fontFamily: "var(--font-dm-mono), monospace",
-                          fontSize: "24px",
                           fontWeight: 500,
                           outline: "none",
                           ...getOtpBoxStyle(focusedIdx === i, otpState),
@@ -467,6 +466,7 @@ export function InviteClient() {
               </motion.p>
             </motion.div>
           )}
+        </div>
         </div>
       </div>
     </div>

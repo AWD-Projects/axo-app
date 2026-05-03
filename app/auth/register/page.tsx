@@ -75,7 +75,7 @@ function validateForm(
 
 function inputStyle(hasError: boolean): React.CSSProperties {
   return {
-    height: "42px",
+    height: "44px",
     padding: "0 14px",
     borderRadius: "8px",
     fontSize: "13px",
@@ -202,19 +202,19 @@ export default function RegisterPage() {
 
       {/* ── Right column ── */}
       <div
-        className="flex-1 flex items-center justify-center px-6 py-10 lg:px-16"
+        className="flex-1 overflow-y-auto"
         style={{ backgroundColor: "#f9f9f7" }}
       >
+        <div className="min-h-full flex items-center justify-center px-6 py-10 lg:px-16">
         <motion.div
           className="w-full max-w-[400px]"
           variants={formContainer}
           initial="hidden"
           animate="visible"
         >
-          {/* Mobile: logo + dots */}
-          <motion.div className="flex flex-col items-center gap-4 mb-8 lg:hidden" variants={formItem}>
+          {/* Mobile: logo */}
+          <motion.div className="flex justify-center mb-8 lg:hidden" variants={formItem}>
             <Logo variant="teal" size="md" />
-            <MobileDots />
           </motion.div>
 
           {/* Header */}
@@ -304,7 +304,7 @@ export default function RegisterPage() {
                   tabIndex={-1}
                   whileTap={{ scale: 0.8 }}
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-5"
                   style={{ color: "#9a958f" }}
                   aria-label={showPassword ? "Ocultar" : "Mostrar"}
                 >
@@ -360,7 +360,7 @@ export default function RegisterPage() {
                   tabIndex={-1}
                   whileTap={{ scale: 0.8 }}
                   onClick={() => setShowConfirm((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-5"
                   style={{ color: "#9a958f" }}
                   aria-label={showConfirm ? "Ocultar" : "Mostrar"}
                 >
@@ -439,6 +439,7 @@ export default function RegisterPage() {
             >Política de privacidad</Link>{" "}de Axo y AMOXTLI.
           </motion.p>
         </motion.div>
+        </div>
       </div>
 
       <style>{`
@@ -560,7 +561,7 @@ function SubmitButton({ state, canSubmit }: { state: FormState; canSubmit: boole
       disabled={isDisabled}
       whileTap={!isDisabled ? { scale: 0.97 } : {}}
       className="w-full flex items-center justify-center gap-2 text-[13px] font-medium rounded-[8px] transition-colors duration-200 disabled:cursor-not-allowed"
-      style={{ height: "42px", backgroundColor: bg, color: "#f9f9f7" }}
+      style={{ height: "44px", backgroundColor: bg, color: "#f9f9f7" }}
       onMouseEnter={(e) => { if (canSubmit && !isLoading && !isSuccess) e.currentTarget.style.backgroundColor = "#144f4b" }}
       onMouseLeave={(e) => { if (canSubmit && !isLoading && !isSuccess) e.currentTarget.style.backgroundColor = "#1a6560" }}
     >
@@ -617,18 +618,6 @@ function StepIndicator() {
           )}
         </div>
       ))}
-    </div>
-  )
-}
-
-function MobileDots() {
-  return (
-    <div className="flex items-center gap-[6px]">
-      {[0, 1, 2].map((i) =>
-        i === 0
-          ? <div key={i} className="w-2 h-2 rounded-full" style={{ backgroundColor: "#1a6560" }} />
-          : <div key={i} className="w-2 h-2 rounded-full" style={{ border: "1px solid #e5e2dc" }} />
-      )}
     </div>
   )
 }

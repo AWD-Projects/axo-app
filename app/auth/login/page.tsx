@@ -153,7 +153,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); if (hasError) setState("idle") }}
                 placeholder="tu@correo.com"
-                className="w-full h-10 px-3 rounded-[8px] text-[13px] transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full h-11 px-3 rounded-[8px] text-[13px] transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   backgroundColor: "#ffffff",
                   color: "#0d0d0d",
@@ -198,7 +198,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); if (hasError) setState("idle") }}
                   placeholder="••••••••"
-                  className="w-full h-10 px-3 pr-10 rounded-[8px] text-[13px] transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-11 px-3 pr-10 rounded-[8px] text-[13px] transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     backgroundColor: "#ffffff",
                     color: "#0d0d0d",
@@ -218,7 +218,7 @@ export default function LoginPage() {
                   type="button"
                   tabIndex={-1}
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-5"
                   style={{ color: "#9a958f" }}
                   whileTap={{ scale: 0.8 }}
                   aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
@@ -256,7 +256,7 @@ export default function LoginPage() {
                 type="submit"
                 disabled={isLoading || !email || !password}
                 whileTap={!isLoading && email && password ? { scale: 0.97 } : {}}
-                className="w-full h-10 rounded-[8px] text-[13px] font-medium transition-colors duration-150 flex items-center justify-center gap-2 mt-2"
+                className="w-full h-11 rounded-[8px] text-[13px] font-medium transition-colors duration-150 flex items-center justify-center gap-2 mt-2"
                 style={{
                   backgroundColor: isLoading || !email || !password ? "#9a958f" : "#1a6560",
                   color: "#f9f9f7",

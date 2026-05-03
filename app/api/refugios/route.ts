@@ -1,4 +1,5 @@
 import { createClient } from "@/src/lib/supabase/server"
+import { createAdminClient } from "@/src/lib/supabase/admin"
 import { NextResponse } from "next/server"
 
 export async function GET() {
@@ -34,7 +35,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "nombre y tipo son requeridos" }, { status: 400 })
   }
 
-  const { data: refugio, error: refugioError } = await supabase
+  const admin = createAdminClient()
+
+  const { data: refugio, error: refugioError } = await admin
     .from("refugios")
     .insert({ nombre, tipo, numero_uma, responsable_tecnico, rfc, ubicacion, ciudad, estado_republica, config_regulatoria })
     .select()
@@ -42,7 +45,7 @@ export async function POST(request: Request) {
 
   if (refugioError) return NextResponse.json({ error: refugioError.message }, { status: 500 })
 
-  const { error: memberError } = await supabase
+  const { error: memberError } = await admin
     .from("refugio_usuarios")
     .insert({ refugio_id: refugio.id, usuario_id: user.id, rol: "admin" })
 
