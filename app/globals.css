@@ -1,23 +1,41 @@
+@import "tw-animate-css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #f9f9f7;
+    --foreground: #0d0d0d;
+    --card: #ffffff;
+    --card-foreground: #0d0d0d;
+    --popover: #ffffff;
+    --popover-foreground: #0d0d0d;
+    --primary: #1a6560;
+    --primary-foreground: #f9f9f7;
+    --secondary: #f3f2ef;
+    --secondary-foreground: #0d0d0d;
+    --muted: #f3f2ef;
+    --muted-foreground: #9a958f;
+    --accent: #e2f0ee;
+    --accent-foreground: #1a6560;
+    --destructive: #991b1b;
+    --border: #e5e2dc;
+    --input: #e5e2dc;
+    --ring: #1a6560;
+    --radius: 0.5rem;
   }
-}
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  * {
+    @apply border-border;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
 }
 
 @layer utilities {
