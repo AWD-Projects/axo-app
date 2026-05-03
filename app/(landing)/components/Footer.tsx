@@ -73,7 +73,7 @@ export function Footer() {
 
         <div className="border-t border-white/10 pt-6 sm:pt-8 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
           <p className="text-[12px] text-white/25 font-sans text-center sm:text-left">
-            © 2025 AMOXTLI. Todos los derechos reservados.
+            © 2026 AMOXTLI. Todos los derechos reservados.
           </p>
           <div className="flex items-center gap-6">
             <Link href="https://github.com/AWD-Projects" className="text-[12px] text-white/30 hover:text-white/60 transition-colors duration-150 font-sans">
