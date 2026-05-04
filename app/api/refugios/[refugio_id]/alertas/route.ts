@@ -17,7 +17,7 @@ export async function GET(
 
   let query = supabase
     .from("alertas")
-    .select("*")
+    .select("*, estanque:estanques(id, nombre), ajolote:ajolotes(id, codigo, nombre)")
     .eq("refugio_id", params.refugio_id)
     .order("leida_at", { ascending: true, nullsFirst: true })
     .order("generada_at", { ascending: false })

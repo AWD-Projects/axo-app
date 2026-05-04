@@ -1,20 +1,28 @@
-import { createAdminClient } from "@/src/lib/supabase/admin"
-import { NextResponse } from "next/server"
-import { RANGOS_SEGUROS } from "@/src/lib/constants"
-import type { Json } from "@/src/types/database"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
-export async function GET(request: Request) {
-  if (request.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new Response("Unauthorized", { status: 401 })
-  }
+const RANGOS_SEGUROS = {
+  temperatura: { min: 16,   max: 18   },
+  ph:          { min: 7.0,  max: 7.8  },
+  amonio:      { min: 0,    max: 0.25 },
+  nitrito:     { min: 0,    max: 0.2  },
+  oxigeno:     { min: 6.0,  max: 10.0 },
+}
 
-  const supabase = createAdminClient()
+Deno.serve(async () => {
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  )
+
   const { data: refugios } = await supabase
     .from("refugios")
     .select("id, config_regulatoria")
     .eq("activo", true)
 
-  type AlertTipo = "agua_amonio_elevado" | "agua_nitrito_elevado" | "agua_ph_fuera_rango" | "agua_temperatura_fuera_rango" | "agua_oxigeno_bajo" | "sin_registro_dias" | "reporte_uma_proximo" | "otro"
+  type AlertTipo =
+    | "agua_amonio_elevado" | "agua_nitrito_elevado" | "agua_ph_fuera_rango"
+    | "agua_temperatura_fuera_rango" | "agua_oxigeno_bajo"
+    | "sin_registro_dias" | "reporte_uma_proximo" | "otro"
 
   const alertasNuevas: Array<{
     refugio_id: string
@@ -23,25 +31,28 @@ export async function GET(request: Request) {
     severidad: "info" | "warning" | "error" | "critical"
     titulo: string
     mensaje: string
-    datos_contexto?: Json
+    datos_contexto?: Record<string, unknown>
   }> = []
+
   const ahora = new Date()
 
   for (const refugio of refugios ?? []) {
-    // Fetch existing open (non-resolved) alerts for this refugio for deduplication
-    const { data: alertasAbiertas } = await supabase
+    // Alertas abiertas para deduplicación
+    const { data: abiertas } = await supabase
       .from("alertas")
       .select("tipo, estanque_id")
       .eq("refugio_id", refugio.id)
       .is("resuelta_at", null)
 
-    // A set of "tipo:estanque_id" already active — skip if already open
-    const abiertas = new Set(
-      (alertasAbiertas ?? []).map(a => `${a.tipo}:${a.estanque_id ?? ""}`)
+    const abiertasSet = new Set(
+      (abiertas ?? []).map((a: { tipo: string; estanque_id: string | null }) =>
+        `${a.tipo}:${a.estanque_id ?? ""}`
+      )
     )
     const yaExiste = (tipo: AlertTipo, estanque_id?: string) =>
-      abiertas.has(`${tipo}:${estanque_id ?? ""}`)
+      abiertasSet.has(`${tipo}:${estanque_id ?? ""}`)
 
+    // Mediciones de los últimos 3 días
     const since3d = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
     const { data: mediciones } = await supabase
       .from("mediciones_agua")
@@ -54,37 +65,42 @@ export async function GET(request: Request) {
       temperatura: number | null; ph: number | null
       amonio: number | null; nitrito: number | null; oxigeno: number | null
     }
-    const porEstanque = (mediciones ?? []).reduce((acc, m) => {
+
+    const porEstanque = (mediciones ?? []).reduce((acc: Record<string, MedRow[]>, m) => {
       if (!acc[m.estanque_id]) acc[m.estanque_id] = []
       acc[m.estanque_id].push(m as MedRow)
       return acc
-    }, {} as Record<string, MedRow[]>)
+    }, {})
 
     for (const [estanque_id, meds] of Object.entries(porEstanque)) {
-      // Amonio elevado 3+ días
+      // Amonio elevado 3+ mediciones
       if (!yaExiste("agua_amonio_elevado", estanque_id)) {
-        const amonio3d = meds.filter(m => m.amonio != null && Number(m.amonio) > RANGOS_SEGUROS.amonio.max)
-        if (amonio3d.length >= 3) {
+        const casos = meds.filter(
+          (m) => m.amonio != null && Number(m.amonio) > RANGOS_SEGUROS.amonio.max
+        )
+        if (casos.length >= 3) {
           alertasNuevas.push({
             refugio_id: refugio.id, estanque_id,
             tipo: "agua_amonio_elevado", severidad: "warning",
             titulo: "Amonio elevado 3+ días consecutivos",
-            mensaje: `El amonio superó ${RANGOS_SEGUROS.amonio.max} ppm en ${amonio3d.length} mediciones. Considera cambio parcial de agua.`,
+            mensaje: `El amonio superó ${RANGOS_SEGUROS.amonio.max} ppm en ${casos.length} mediciones. Considera cambio parcial de agua.`,
             datos_contexto: {
-              valor_actual: Math.max(...amonio3d.map(m => Number(m.amonio))),
+              valor_actual: Math.max(...casos.map((m) => Number(m.amonio))),
               unidad: "ppm",
               umbral_max: RANGOS_SEGUROS.amonio.max,
-              mediciones: amonio3d.length,
+              mediciones: casos.length,
             },
           })
         }
       }
 
-      // Nitrito crítico
+      // Nitrito crítico (>2× umbral en 2+ mediciones)
       if (!yaExiste("agua_nitrito_elevado", estanque_id)) {
-        const nitritoCritico = meds.filter(m => m.nitrito != null && Number(m.nitrito) > RANGOS_SEGUROS.nitrito.max * 2)
-        if (nitritoCritico.length >= 2) {
-          const maxNitrito = Math.max(...nitritoCritico.map(m => Number(m.nitrito)))
+        const casos = meds.filter(
+          (m) => m.nitrito != null && Number(m.nitrito) > RANGOS_SEGUROS.nitrito.max * 2
+        )
+        if (casos.length >= 2) {
+          const maxNitrito = Math.max(...casos.map((m) => Number(m.nitrito)))
           alertasNuevas.push({
             refugio_id: refugio.id, estanque_id,
             tipo: "agua_nitrito_elevado", severidad: "error",
@@ -120,6 +136,49 @@ export async function GET(request: Request) {
           }
         }
       }
+
+      // pH fuera de rango (última medición)
+      if (!yaExiste("agua_ph_fuera_rango", estanque_id)) {
+        const ultima = meds.at(-1)
+        if (ultima?.ph != null) {
+          const ph = Number(ultima.ph)
+          if (ph < RANGOS_SEGUROS.ph.min || ph > RANGOS_SEGUROS.ph.max) {
+            alertasNuevas.push({
+              refugio_id: refugio.id, estanque_id,
+              tipo: "agua_ph_fuera_rango", severidad: "warning",
+              titulo: `pH fuera de rango: ${ph}`,
+              mensaje: `pH actual ${ph} fuera del rango óptimo (${RANGOS_SEGUROS.ph.min}–${RANGOS_SEGUROS.ph.max}).`,
+              datos_contexto: {
+                valor_actual: ph,
+                unidad: "",
+                umbral_min: RANGOS_SEGUROS.ph.min,
+                umbral_max: RANGOS_SEGUROS.ph.max,
+              },
+            })
+          }
+        }
+      }
+
+      // Oxígeno bajo (última medición)
+      if (!yaExiste("agua_oxigeno_bajo", estanque_id)) {
+        const ultima = meds.at(-1)
+        if (ultima?.oxigeno != null) {
+          const o2 = Number(ultima.oxigeno)
+          if (o2 < RANGOS_SEGUROS.oxigeno.min) {
+            alertasNuevas.push({
+              refugio_id: refugio.id, estanque_id,
+              tipo: "agua_oxigeno_bajo", severidad: "error",
+              titulo: `Oxígeno bajo: ${o2} mg/L`,
+              mensaje: `Oxígeno disuelto ${o2} mg/L por debajo del mínimo seguro (${RANGOS_SEGUROS.oxigeno.min} mg/L).`,
+              datos_contexto: {
+                valor_actual: o2,
+                unidad: "mg/L",
+                umbral_min: RANGOS_SEGUROS.oxigeno.min,
+              },
+            })
+          }
+        }
+      }
     }
 
     // Sin registro en 48h
@@ -130,10 +189,10 @@ export async function GET(request: Request) {
         .eq("refugio_id", refugio.id)
         .order("fecha_hora", { ascending: false })
         .limit(1)
-        .single()
+        .maybeSingle()
 
       const hSinRegistro = ultimaMed
-        ? (Date.now() - new Date(ultimaMed.fecha_hora).getTime()) / 3600000
+        ? (Date.now() - new Date(ultimaMed.fecha_hora).getTime()) / 3_600_000
         : 999
 
       if (hSinRegistro > 48) {
@@ -147,13 +206,13 @@ export async function GET(request: Request) {
       }
     }
 
-    // Vencimiento UMA (solo alertar en días exactos: 30, 15, 7)
+    // Vencimiento UMA (solo los días exactos 30, 15, 7)
     const configReg = refugio.config_regulatoria as Record<string, boolean> | null
     if (configReg?.reporte_trimestral && !yaExiste("reporte_uma_proximo")) {
       const mes = ahora.getMonth() + 1
       const dia = ahora.getDate()
       const mesesVencimiento = [1, 4, 7, 10]
-      const proximoMes = mesesVencimiento.find(m => m >= mes) ?? 1
+      const proximoMes = mesesVencimiento.find((m) => m >= mes) ?? 1
       const diasFin = new Date(ahora.getFullYear(), proximoMes, 0).getDate()
       const diasRestantes = diasFin - dia + (proximoMes - mes) * 30
 
@@ -174,8 +233,11 @@ export async function GET(request: Request) {
     await supabase.from("alertas").insert(alertasNuevas)
   }
 
-  return NextResponse.json({
-    alertas_generadas: alertasNuevas.length,
-    refugios_procesados: refugios?.length ?? 0,
-  })
-}
+  return new Response(
+    JSON.stringify({
+      alertas_generadas: alertasNuevas.length,
+      refugios_procesados: refugios?.length ?? 0,
+    }),
+    { headers: { "Content-Type": "application/json" } },
+  )
+})
