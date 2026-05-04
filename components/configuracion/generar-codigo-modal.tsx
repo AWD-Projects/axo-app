@@ -35,34 +35,7 @@ const ROLE_OPTIONS: RoleOption[] = [
   { rol: "lectura",      label: "Lectura",       accentColor: "#9a958f", bgLight: "#f3f2ef", pillBg: "#f3f2ef", pillText: "#9a958f" },
 ]
 
-// Unambiguous alphanumeric chars for random suffix
-const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
-
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
-function toAbbreviation(nombre: string): string {
-  const stopWords = new Set(["de", "del", "la", "el", "los", "las", "y", "e", "o", "en", "a"])
-  const words = nombre.trim().toUpperCase().split(/\s+/).filter(Boolean)
-  const significant = words.filter(w => !stopWords.has(w.toLowerCase()))
-  if (significant.length === 0) return "REF"
-  if (significant.length === 1) {
-    const clean = significant[0].replace(/[^A-Z0-9]/g, "")
-    return clean.slice(0, 4) || "REF"
-  }
-  const initials = significant.slice(0, 4).map(w => w.replace(/[^A-Z0-9]/g, "")[0]).filter(Boolean).join("")
-  return initials || "REF"
-}
-
-function generateUniqueCode(nombre: string, existing: string[]): string {
-  const abr = toAbbreviation(nombre)
-  for (let i = 0; i < 50; i++) {
-    const suffix = Array.from({ length: 4 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join("")
-    const code = `${abr}-${suffix}`
-    if (!existing.includes(code)) return code
-  }
-  const suffix = Array.from({ length: 6 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join("")
-  return `${abr}-${suffix}`
-}
+import { generateUniqueCode } from "@/src/lib/code-generation"
 
 // ── Toggle ─────────────────────────────────────────────────────────────────────
 

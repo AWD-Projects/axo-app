@@ -27,25 +27,7 @@ interface AjoloteModalProps {
   onSuccess: () => void
 }
 
-// ── Code generation ───────────────────────────────────────────────────────────
-
-function toAbbreviation(nombre: string): string {
-  const stopWords = new Set(["de", "del", "la", "el", "los", "las", "y", "e", "o", "en", "a"])
-  const words = nombre.trim().toUpperCase().split(/\s+/).filter(Boolean)
-  const significant = words.filter(w => !stopWords.has(w.toLowerCase()))
-  if (significant.length === 0) return "REF"
-  if (significant.length === 1) {
-    const clean = significant[0].replace(/[^A-Z0-9]/g, "")
-    return clean.slice(0, 4) || "REF"
-  }
-  const initials = significant.slice(0, 4).map(w => w.replace(/[^A-Z0-9]/g, "")[0]).filter(Boolean).join("")
-  return initials || "REF"
-}
-
-function generateAjoloteCode(nombre: string, index: number): string {
-  const abr = toAbbreviation(nombre)
-  return `${abr}-${String(index).padStart(3, "0")}`
-}
+import { generateAjoloteCode } from "@/src/lib/code-generation"
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
 
