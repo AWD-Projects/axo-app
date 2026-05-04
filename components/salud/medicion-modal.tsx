@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { X } from "lucide-react"
+import { X, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -122,9 +123,10 @@ export function MedicionModal({ open, onClose, refugioId, onSuccess, preselected
         body: JSON.stringify(body),
       })
       const data = await res.json()
-      if (!res.ok) { setError(data.error ?? "Error al registrar"); return }
+      if (!res.ok) { setError(data.error ?? "Error al registrar"); toast.error(data.error ?? "Error al registrar"); return }
+      toast.success("Medición registrada")
       onSuccess(); onClose()
-    } catch { setError("Error de conexión") }
+    } catch { setError("Error de conexión"); toast.error("Error de conexión") }
     finally { setSaving(false) }
   }
 
@@ -296,7 +298,7 @@ export function MedicionModal({ open, onClose, refugioId, onSuccess, preselected
               ) : (
                 <button type="button" onClick={handleSubmit} disabled={saving}
                   style={{ height: 34, padding: "0 16px", borderRadius: 8, border: "none", backgroundColor: saving ? "#9a958f" : "#1a6560", fontFamily: "var(--font-dm-sans), DM Sans, sans-serif", fontSize: 12, fontWeight: 500, color: "#f9f9f7", cursor: saving ? "default" : "pointer" }}>
-                  {saving ? "Registrando..." : "Registrar"}
+                  {saving ? <><Loader2 size={13} className="animate-spin" /> Registrando...</> : "Registrar"}
                 </button>
               )}
             </div>

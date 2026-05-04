@@ -340,7 +340,6 @@ export default function AxoAIPage() {
   const showBanner = nearLimit || atLimit
 
   const activeConv = conversations.find(c => c.id === activeConvId)
-  const postMortemActive = activeConv ? isPostMortem(activeConv.titulo) : false
 
   // ── Render ────────────────────────────────────────────────────────────────────
 

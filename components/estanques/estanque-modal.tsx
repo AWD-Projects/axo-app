@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { X, Trash2 } from "lucide-react"
+import { X, Trash2, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -161,11 +162,12 @@ export function EstanqueModal({ open, onClose, refugioId, estanque, onSuccess }:
       const method = isEdit ? "PATCH" : "POST"
       const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
       const data = await res.json()
-      if (!res.ok) { setError(data.error ?? "Error al guardar"); return }
+      if (!res.ok) { setError(data.error ?? "Error al guardar"); toast.error(data.error ?? "Error al guardar"); return }
+      toast.success(isEdit ? "Estanque actualizado" : "Estanque creado")
       onSuccess({ id: data.data.id, nombre: data.data.nombre })
       onClose()
     } catch {
-      setError("Error de conexión")
+      setError("Error de conexión"); toast.error("Error de conexión")
     } finally {
       setSaving(false)
     }
@@ -178,11 +180,12 @@ export function EstanqueModal({ open, onClose, refugioId, estanque, onSuccess }:
     try {
       const res = await fetch(`/api/refugios/${refugioId}/estanques/${estanque.id}`, { method: "DELETE" })
       const data = await res.json()
-      if (!res.ok) { setError(data.error ?? "Error al eliminar"); setDeleting(false); return }
+      if (!res.ok) { setError(data.error ?? "Error al eliminar"); toast.error(data.error ?? "Error al eliminar"); setDeleting(false); return }
+      toast.success("Estanque eliminado")
       onSuccess({ id: estanque.id!, nombre: estanque.nombre! })
       onClose()
     } catch {
-      setError("Error de conexión")
+      setError("Error de conexión"); toast.error("Error de conexión")
     } finally {
       setDeleting(false)
     }
@@ -442,7 +445,7 @@ export function EstanqueModal({ open, onClose, refugioId, estanque, onSuccess }:
                     padding: 0,
                   }}
                 >
-                  <Trash2 size={14} />
+                  {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                   {deleting ? "Eliminando..." : "Eliminar estanque"}
                 </button>
               )}
@@ -484,7 +487,7 @@ export function EstanqueModal({ open, onClose, refugioId, estanque, onSuccess }:
                   transition: "background-color 150ms",
                 }}
               >
-                {saving ? "Guardando..." : "Guardar estanque"}
+                {saving ? <><Loader2 size={13} className="animate-spin" /> Guardando...</> : "Guardar estanque"}
               </button>
             </div>
           </motion.div>

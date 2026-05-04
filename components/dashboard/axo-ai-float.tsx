@@ -91,6 +91,11 @@ export function AxoAIFloat() {
 
   useEffect(() => { loadAlertCount() }, [loadAlertCount])
 
+  useEffect(() => {
+    window.addEventListener("alertas-updated", loadAlertCount)
+    return () => window.removeEventListener("alertas-updated", loadAlertCount)
+  }, [loadAlertCount])
+
   // ── Keyboard + outside click ─────────────────────────────────────────────
 
   useEffect(() => {
@@ -131,7 +136,7 @@ export function AxoAIFloat() {
   }
 
   function toggle() {
-    wState === "closed" ? open() : close()
+    if (wState === "closed") open(); else close()
   }
 
   function resetToOpen() {

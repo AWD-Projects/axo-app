@@ -306,7 +306,7 @@ function LoteCard({ lote }: { lote: LoteLarval }) {
 export default function InventarioPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { activeRefugioId } = useRefugio()
+  const { activeRefugioId, activeRefugio } = useRefugio()
 
   const [tab, setTab] = useState<Tab>("ajolotes")
   const [ajolotes, setAjolotes] = useState<Ajolote[]>([])
@@ -647,7 +647,7 @@ export default function InventarioPage() {
 
       {/* Modal */}
       {activeRefugioId && (
-        <AjoloteModal open={modalOpen} onClose={() => setModalOpen(false)} refugioId={activeRefugioId} onSuccess={load} />
+        <AjoloteModal open={modalOpen} onClose={() => setModalOpen(false)} refugioId={activeRefugioId} refugioNombre={activeRefugio?.nombre ?? ""} onSuccess={load} />
       )}
     </div>
   )

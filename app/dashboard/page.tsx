@@ -457,7 +457,9 @@ export default function DashboardPage() {
       {/* Topbar */}
       <div className="pt-2 pb-1">
         <h1 className="text-3xl font-semibold tracking-tight" style={{ color: "#0d0d0d" }}>
-          {greeting()}{user?.nombre ? `, ${user.nombre}.` : "."}
+          {greeting()}{ctxLoading
+            ? <Skeleton style={{ display: "inline-block", width: 120, height: 28, borderRadius: 6, verticalAlign: "middle", marginLeft: 6 }} />
+            : user?.nombre ? `, ${user.nombre}.` : "."}
         </h1>
         <p className="text-sm capitalize mt-1" style={{ color: "#9a958f" }}>{todayLabel()}</p>
       </div>

@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { X, Search, Sparkles, X as XIcon, Thermometer, Activity, ArrowRight, ArrowDownCircle, ArrowUpCircle, MoreHorizontal } from "lucide-react"
+import { X, Search, Sparkles, X as XIcon, Thermometer, Activity, ArrowRight, ArrowDownCircle, ArrowUpCircle, MoreHorizontal, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -182,9 +183,10 @@ export function EventoModal({ open, onClose, refugioId, onSuccess }: EventoModal
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
       })
       const data = await res.json()
-      if (!res.ok) { setError(data.error ?? "Error al guardar"); return }
+      if (!res.ok) { setError(data.error ?? "Error al guardar"); toast.error(data.error ?? "Error al guardar"); return }
+      toast.success("Evento registrado")
       onSuccess(); onClose()
-    } catch { setError("Error de conexión") }
+    } catch { setError("Error de conexión"); toast.error("Error de conexión") }
     finally { setSaving(false) }
   }
 
@@ -512,7 +514,7 @@ export function EventoModal({ open, onClose, refugioId, onSuccess }: EventoModal
               ) : (
                 <button type="button" onClick={handleSubmit} disabled={saving}
                   style={{ height: 34, padding: "0 18px", borderRadius: 8, border: "none", backgroundColor: saving ? "#9a958f" : (ti ? ti.color : "#1a6560"), fontFamily: "var(--font-dm-sans), DM Sans, sans-serif", fontSize: 12, fontWeight: 500, color: "#ffffff", cursor: saving ? "default" : "pointer" }}>
-                  {saving ? "Guardando..." : "Guardar evento"}
+                  {saving ? <><Loader2 size={13} className="animate-spin" /> Guardando...</> : "Guardar evento"}
                 </button>
               )}
             </div>

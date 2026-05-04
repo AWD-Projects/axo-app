@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { X, Search } from "lucide-react"
+import { X, Search, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -22,7 +23,28 @@ interface AjoloteModalProps {
   open: boolean
   onClose: () => void
   refugioId: string
+  refugioNombre: string
   onSuccess: () => void
+}
+
+// ── Code generation ───────────────────────────────────────────────────────────
+
+function toAbbreviation(nombre: string): string {
+  const stopWords = new Set(["de", "del", "la", "el", "los", "las", "y", "e", "o", "en", "a"])
+  const words = nombre.trim().toUpperCase().split(/\s+/).filter(Boolean)
+  const significant = words.filter(w => !stopWords.has(w.toLowerCase()))
+  if (significant.length === 0) return "REF"
+  if (significant.length === 1) {
+    const clean = significant[0].replace(/[^A-Z0-9]/g, "")
+    return clean.slice(0, 4) || "REF"
+  }
+  const initials = significant.slice(0, 4).map(w => w.replace(/[^A-Z0-9]/g, "")[0]).filter(Boolean).join("")
+  return initials || "REF"
+}
+
+function generateAjoloteCode(nombre: string, index: number): string {
+  const abr = toAbbreviation(nombre)
+  return `${abr}-${String(index).padStart(3, "0")}`
 }
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
@@ -150,12 +172,13 @@ function coefColor(c: number): { text: string; label: string } {
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
 
-export function AjoloteModal({ open, onClose, refugioId, onSuccess }: AjoloteModalProps) {
+export function AjoloteModal({ open, onClose, refugioId, refugioNombre, onSuccess }: AjoloteModalProps) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
   const [estanques, setEstanques] = useState<Estanque[]>([])
 
   const [codigo, setCodigo] = useState("")
+  const [loadingCode, setLoadingCode] = useState(false)
   const [nombre, setNombre] = useState("")
   const [sexo, setSexo] = useState<"macho" | "hembra" | "indeterminado" | "">("")
   const [morfotipo, setMorfotipo] = useState("normal")
@@ -177,10 +200,19 @@ export function AjoloteModal({ open, onClose, refugioId, onSuccess }: AjoloteMod
     setOrigen("nacido_en_refugio"); setFechaNacimiento(""); setEstanqueId("")
     setMadreId(null); setMadreCodigo(""); setPadreId(null); setPadreCodigo("")
     setCoef(null); setNotas("")
-    fetch(`/api/refugios/${refugioId}/estanques`)
-      .then(r => r.json())
-      .then(({ data }) => setEstanques((data ?? []).filter((e: { activo: boolean }) => e.activo !== false)))
-  }, [open, refugioId])
+
+    setLoadingCode(true)
+    Promise.all([
+      fetch(`/api/refugios/${refugioId}/estanques`).then(r => r.json()),
+      fetch(`/api/refugios/${refugioId}/ajolotes`).then(r => r.json()),
+    ]).then(([estanquesData, ajolotesData]) => {
+      setEstanques((estanquesData.data ?? []).filter((e: { activo: boolean }) => e.activo !== false))
+      const count = (ajolotesData.data ?? []).length
+      setCodigo(generateAjoloteCode(refugioNombre || "REF", count + 1))
+    }).catch(() => {
+      setCodigo(generateAjoloteCode(refugioNombre || "REF", 1))
+    }).finally(() => setLoadingCode(false))
+  }, [open, refugioId, refugioNombre])
 
   // Fetch coef when both parents selected
   useEffect(() => {
@@ -201,7 +233,6 @@ export function AjoloteModal({ open, onClose, refugioId, onSuccess }: AjoloteMod
   }, [madreId, padreId, refugioId])
 
   async function handleSubmit() {
-    if (!codigo.trim()) { setError("El código es requerido"); return }
     if (!origen) { setError("El origen es requerido"); return }
     setSaving(true); setError("")
     try {
@@ -222,10 +253,11 @@ export function AjoloteModal({ open, onClose, refugioId, onSuccess }: AjoloteMod
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
       })
       const data = await res.json()
-      if (!res.ok) { setError(data.error ?? "Error al registrar"); return }
+      if (!res.ok) { setError(data.error ?? "Error al registrar"); toast.error(data.error ?? "Error al registrar"); return }
+      toast.success(`Ajolote ${codigo.trim().toUpperCase()} registrado`)
       onSuccess(); onClose()
     } catch {
-      setError("Error de conexión")
+      setError("Error de conexión"); toast.error("Error de conexión")
     } finally {
       setSaving(false)
     }
@@ -278,11 +310,22 @@ export function AjoloteModal({ open, onClose, refugioId, onSuccess }: AjoloteMod
               {/* Código + Nombre */}
               <div className="grid grid-cols-2" style={{ gap: 12 }}>
                 <div>
-                  <label style={labelStyle}>Código <span style={{ color: "#dc2626" }}>*</span></label>
-                  <input type="text" value={codigo} onChange={e => setCodigo(e.target.value)}
-                    placeholder="Ej. M-17" style={monoInputStyle} />
+                  <label style={labelStyle}>Código</label>
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 6,
+                    height: 42, borderRadius: 8, border: "0.5px solid #e5e2dc",
+                    backgroundColor: "#f9f9f7", padding: "0 12px",
+                  }}>
+                    {loadingCode ? (
+                      <Loader2 size={13} color="#9a958f" style={{ animation: "spin 1s linear infinite", flexShrink: 0 }} />
+                    ) : (
+                      <span style={{ fontFamily: "var(--font-dm-mono), DM Mono, monospace", fontSize: 14, fontWeight: 500, color: "#0d0d0d", letterSpacing: "0.06em", flex: 1 }}>
+                        {codigo}
+                      </span>
+                    )}
+                  </div>
                   <span style={{ fontFamily: "var(--font-dm-sans), DM Sans, sans-serif", fontSize: 11, color: "#9a958f", display: "block", marginTop: 4 }}>
-                    Debe ser único en el refugio
+                    Generado automáticamente
                   </span>
                 </div>
                 <div>
@@ -417,7 +460,7 @@ export function AjoloteModal({ open, onClose, refugioId, onSuccess }: AjoloteMod
               </button>
               <button type="button" onClick={handleSubmit} disabled={saving}
                 style={{ height: 36, padding: "0 14px", borderRadius: 8, border: "none", backgroundColor: saving ? "#9a958f" : "#1a6560", fontFamily: "var(--font-dm-sans), DM Sans, sans-serif", fontSize: 12, fontWeight: 500, color: "#f9f9f7", cursor: saving ? "default" : "pointer", transition: "background-color 150ms" }}>
-                {saving ? "Registrando..." : "Registrar ajolote"}
+                {saving ? <><Loader2 size={13} className="animate-spin" /> Registrando...</> : "Registrar ajolote"}
               </button>
             </div>
           </motion.div>

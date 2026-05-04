@@ -130,6 +130,7 @@ export default function AlertasPage() {
   async function markRead(id: string) {
     if (!activeRefugioId) return
     setAlertas(prev => prev.map(a => a.id === id ? { ...a, leida_at: new Date().toISOString() } : a))
+    window.dispatchEvent(new CustomEvent("alertas-updated"))
     await fetch(`/api/refugios/${activeRefugioId}/alertas/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -142,6 +143,7 @@ export default function AlertasPage() {
     setMarkingAll(true)
     const now = new Date().toISOString()
     setAlertas(prev => prev.map(a => ({ ...a, leida_at: a.leida_at ?? now })))
+    window.dispatchEvent(new CustomEvent("alertas-updated"))
     try {
       await fetch(`/api/refugios/${activeRefugioId}/alertas/leer-todas`, { method: "POST" })
     } finally {

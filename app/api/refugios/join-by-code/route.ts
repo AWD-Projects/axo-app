@@ -65,7 +65,10 @@ export async function POST(request: Request) {
 
   if (ya) return NextResponse.json({ error: `Ya eres miembro de este refugio (${ya.rol})` }, { status: 409 })
 
-  await admin.from("refugio_usuarios").insert({ refugio_id: ref.refugio_id, usuario_id: user.id, rol: ref.rol, activo: true })
+  await admin.from("refugio_usuarios").upsert(
+    { refugio_id: ref.refugio_id, usuario_id: user.id, rol: ref.rol, activo: true },
+    { onConflict: "refugio_id,usuario_id" }
+  )
   await admin.from("codigos_refugio").update({ usos: ref.usos + 1 }).eq("id", ref.id)
 
   return NextResponse.json({

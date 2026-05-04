@@ -39,10 +39,13 @@ export async function POST(request: Request) {
     userId = newUser.user.id
     await supabase.from("usuarios_perfil").upsert({ id: userId, nombre, apellido, email: inv.email })
   } else {
-    const { data: { users } } = await supabase.auth.admin.listUsers()
-    const existing = users.find(u => u.email === inv.email)
-    if (!existing) return NextResponse.json({ error: "No encontramos cuenta con ese email" }, { status: 404 })
-    userId = existing.id
+    const { data: profile } = await supabase
+      .from("usuarios_perfil")
+      .select("id")
+      .eq("email", inv.email)
+      .single()
+    if (!profile) return NextResponse.json({ error: "No encontramos una cuenta con ese correo. Usa la opción 'No tengo cuenta' para registrarte." }, { status: 404 })
+    userId = profile.id
   }
 
   await supabase.from("refugio_usuarios").upsert(

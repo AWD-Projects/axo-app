@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { motion, AnimatePresence, useAnimate } from "framer-motion"
+import { Check, Clock, Loader2, ArrowLeft } from "lucide-react"
 import { createClient } from "@/src/lib/supabase/client"
 import { Logo } from "@/components/Logo"
 
@@ -77,6 +78,7 @@ export function InviteClient() {
 
   const [pageState, setPageState] = useState<PageState>("fetching")
   const [invData, setInvData] = useState<InvitationData | null>(null)
+  const [hasAccount, setHasAccount] = useState<boolean | null>(null) // null = not chosen yet
   const [digits, setDigits] = useState<string[]>(["", "", "", "", "", ""])
   const [focusedIdx, setFocusedIdx] = useState<number | null>(null)
   const [otpState, setOtpState] = useState<OtpState>("idle")
@@ -88,21 +90,26 @@ export function InviteClient() {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([null, null, null, null, null, null])
   const [otpRef, animateOtp] = useAnimate()
 
-  // Fetch invitation
+  // Fetch invitation + check session
   useEffect(() => {
     if (!token) { setPageState("not_found"); return }
-    fetch(`/api/invitations/${token}`)
-      .then(async (res) => {
-        const json = await res.json()
-        if (!res.ok) {
-          setPageState(json.code === "EXPIRED" || json.code === "USED" ? "expired_token" : "not_found")
-          return
-        }
-        setInvData(json.data)
-        setPageState("valid")
-        if (json.data.locked) setOtpState("locked")
-      })
-      .catch(() => setPageState("not_found"))
+
+    const supabase = createClient()
+    Promise.all([
+      fetch(`/api/invitations/${token}`),
+      supabase.auth.getSession(),
+    ]).then(async ([res, { data: { session } }]) => {
+      const json = await res.json()
+      if (!res.ok) {
+        setPageState(json.code === "EXPIRED" || json.code === "USED" ? "expired_token" : "not_found")
+        return
+      }
+      setInvData(json.data)
+      setPageState("valid")
+      if (json.data.locked) setOtpState("locked")
+      // If already logged in, skip the account choice
+      if (session) setHasAccount(true)
+    }).catch(() => setPageState("not_found"))
   }, [token])
 
   // Countdown timer
@@ -263,15 +270,54 @@ export function InviteClient() {
           {/* Fetching */}
           {pageState === "fetching" && (
             <div className="flex items-center justify-center py-16">
-              <Spinner color="#1a6560" size={20} />
+              <Loader2 size={20} className="animate-spin" color="#1a6560" />
             </div>
           )}
 
           {/* Expired / not found */}
           {(pageState === "expired_token" || pageState === "not_found") && <ExpiredTokenContent />}
 
+          {/* Account choice */}
+          {pageState === "valid" && invData && hasAccount === null && (
+            <motion.div variants={formContainer} initial="hidden" animate="visible">
+              <motion.div className="mb-8" variants={formItem}>
+                <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.02em]" style={{ color: "#0d0d0d" }}>
+                  Acepta tu invitación
+                </h1>
+                <p className="mt-2 text-[13px] leading-[1.5]" style={{ color: "#9a958f" }}>
+                  Para unirte a <span className="font-medium" style={{ color: "#3c3a36" }}>{invData.refugio.nombre}</span>, primero dinos si ya tienes una cuenta.
+                </p>
+              </motion.div>
+
+              <motion.div className="flex flex-col gap-3" variants={formItem}>
+                <button
+                  type="button"
+                  onClick={() => setHasAccount(true)}
+                  className="w-full text-left rounded-[10px] px-5 py-4 transition-colors duration-150"
+                  style={{ backgroundColor: "#ffffff", border: "0.5px solid #e5e2dc" }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = "#1a6560")}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = "#e5e2dc")}
+                >
+                  <p className="text-[14px] font-medium" style={{ color: "#0d0d0d" }}>Ya tengo una cuenta</p>
+                  <p className="text-[12px] mt-0.5" style={{ color: "#9a958f" }}>Ingresa tu código OTP y accede directamente.</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push(`/invite/new?token=${token}`)}
+                  className="w-full text-left rounded-[10px] px-5 py-4 transition-colors duration-150"
+                  style={{ backgroundColor: "#ffffff", border: "0.5px solid #e5e2dc" }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = "#1a6560")}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = "#e5e2dc")}
+                >
+                  <p className="text-[14px] font-medium" style={{ color: "#0d0d0d" }}>No tengo cuenta</p>
+                  <p className="text-[12px] mt-0.5" style={{ color: "#9a958f" }}>Crea tu cuenta con el código que recibiste.</p>
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+
           {/* OTP form */}
-          {pageState === "valid" && invData && (
+          {pageState === "valid" && invData && hasAccount === true && (
             <motion.div variants={formContainer} initial="hidden" animate="visible">
               {/* Header */}
               <motion.div className="mb-9" variants={formItem}>
@@ -287,9 +333,9 @@ export function InviteClient() {
                     <motion.span
                       key="sent"
                       initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-                      className="text-[12px] font-medium" style={{ color: "#15803d" }}
+                      className="inline-flex items-center gap-1 text-[12px] font-medium" style={{ color: "#15803d" }}
                     >
-                      ✓ Código enviado
+                      <Check size={12} /> Código enviado
                     </motion.span>
                   ) : (
                     <motion.button
@@ -383,7 +429,7 @@ export function InviteClient() {
                         onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f3f2ef")}
                         onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#ffffff")}
                       >
-                        {resentLoading ? <><Spinner size={14} /> Enviando...</> : "Solicitar nuevo código"}
+                        {resentLoading ? <><Loader2 size={14} className="animate-spin" /> Enviando...</> : "Solicitar nuevo código"}
                       </motion.button>
                     </motion.div>
                   )}
@@ -431,14 +477,14 @@ export function InviteClient() {
                     {otpState === "verifying" && (
                       <motion.span key="v" className="flex items-center gap-2"
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
-                        <Spinner /> Verificando...
+                        <Loader2 size={16} className="animate-spin" /> Verificando...
                       </motion.span>
                     )}
                     {otpState === "success" && (
                       <motion.span key="s" className="flex items-center gap-2"
                         initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
                         transition={{ type: "spring", stiffness: 400, damping: 20 }}>
-                        <CheckIcon /> ¡Verificado!
+                        <Check size={16} /> ¡Verificado!
                       </motion.span>
                     )}
                     {otpState !== "verifying" && otpState !== "success" && (
@@ -451,19 +497,32 @@ export function InviteClient() {
                 </motion.button>
               </motion.div>
 
-              {/* Wrong account */}
-              <motion.p className="mt-4 text-center text-[12px]" style={{ color: "#9a958f" }} variants={formItem}>
-                ¿Esta invitación no es para ti?{" "}
+              {/* Footer links */}
+              <motion.div className="mt-4 flex flex-col items-center gap-2" variants={formItem}>
                 <motion.button
-                  type="button" onClick={handleSignOut} whileTap={{ scale: 0.95 }}
-                  className="font-medium transition-colors duration-150"
-                  style={{ color: "#1a6560" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = "#144f4b")}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = "#1a6560")}
+                  type="button"
+                  onClick={() => setHasAccount(null)}
+                  whileTap={{ scale: 0.95 }}
+                  className="inline-flex items-center gap-1 text-[12px] transition-colors duration-150"
+                  style={{ color: "#9a958f" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = "#3c3a36")}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = "#9a958f")}
                 >
-                  Cerrar sesión
+                  <ArrowLeft size={14} /> Volver
                 </motion.button>
-              </motion.p>
+                <p className="text-[12px] text-center" style={{ color: "#9a958f" }}>
+                  ¿Esta invitación no es para ti?{" "}
+                  <motion.button
+                    type="button" onClick={handleSignOut} whileTap={{ scale: 0.95 }}
+                    className="font-medium transition-colors duration-150"
+                    style={{ color: "#1a6560" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "#144f4b")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "#1a6560")}
+                  >
+                    Cerrar sesión
+                  </motion.button>
+                </p>
+              </motion.div>
             </motion.div>
           )}
         </div>
@@ -548,7 +607,7 @@ function InviteStepIndicator() {
     <div className="flex flex-col gap-0">
       <div className="flex items-center gap-3">
         <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#15803d" }}>
-          <CheckSmIcon />
+          <Check size={10} color="#f9f9f7" strokeWidth={3} />
         </div>
         <span className="text-[12px]" style={{ color: "#9a958f", textDecoration: "line-through" }}>Cuenta creada</span>
       </div>
@@ -580,7 +639,7 @@ function ExpiredTokenContent() {
       initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
       className="flex flex-col items-center text-center py-8"
     >
-      <ClockIcon />
+      <Clock size={32} color="#e5e2dc" strokeWidth={1.5} />
       <h2 className="mt-4 text-[20px] font-medium" style={{ color: "#0d0d0d" }}>Esta invitación expiró</h2>
       <p className="mt-2 text-[13px] leading-[1.6] max-w-[320px]" style={{ color: "#9a958f" }}>
         Los enlaces de invitación son válidos por 7 días. Pide al administrador del refugio que te envíe una nueva invitación.
@@ -599,36 +658,3 @@ function ExpiredTokenContent() {
   )
 }
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
-
-function Spinner({ size = 16, color = "currentColor" }: { size?: number; color?: string }) {
-  return (
-    <svg className="animate-spin" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
-      <path d="M21 12a9 9 0 1 1-6.219-8.56" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-function CheckIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  )
-}
-
-function CheckSmIcon() {
-  return (
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#f9f9f7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  )
-}
-
-function ClockIcon() {
-  return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#e5e2dc" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
-    </svg>
-  )
-}

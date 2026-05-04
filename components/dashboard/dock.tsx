@@ -758,7 +758,9 @@ export function DockSidebar() {
     }
     fetchAlerts()
     const interval = setInterval(fetchAlerts, 60_000)
-    return () => clearInterval(interval)
+    const onUpdated = () => fetchAlerts()
+    window.addEventListener("alertas-updated", onUpdated)
+    return () => { clearInterval(interval); window.removeEventListener("alertas-updated", onUpdated) }
   }, [activeRefugioId])
 
   async function handleLogout() {
@@ -787,7 +789,7 @@ export function DockSidebar() {
           pathname={pathname}
           alertCount={alertCount}
           onLogout={() => setLogoutOpen(true)}
-          onSettings={() => router.push("/dashboard/settings")}
+          onSettings={() => router.push("/configuracion")}
         />
       </div>
 
@@ -839,7 +841,7 @@ export function DockSidebar() {
                 pathname={pathname}
                 alertCount={alertCount}
                 onLogout={() => { setMobileOpen(false); setLogoutOpen(true) }}
-                onSettings={() => { setMobileOpen(false); router.push("/dashboard/settings") }}
+                onSettings={() => { setMobileOpen(false); router.push("/configuracion") }}
               />
             </motion.div>
           </>

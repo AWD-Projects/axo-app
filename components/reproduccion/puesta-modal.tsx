@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { X, Sparkles } from "lucide-react"
+import { X, Sparkles, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 interface PuestaModalProps {
   open: boolean
@@ -74,11 +75,12 @@ export function PuestaModal({ open, onClose, refugioId, cruzaId, cruzaLabel, onS
         }),
       })
       const body = await res.json()
-      if (!res.ok) { setError(body.error ?? "Error al registrar puesta"); return }
+      if (!res.ok) { setError(body.error ?? "Error al registrar puesta"); toast.error(body.error ?? "Error al registrar puesta"); return }
+      toast.success("Puesta registrada")
       onSuccess()
       onClose()
     } catch {
-      setError("Error de red al registrar la puesta")
+      setError("Error de red al registrar la puesta"); toast.error("Error de red al registrar la puesta")
     } finally {
       setSubmitting(false)
     }
@@ -207,7 +209,7 @@ export function PuestaModal({ open, onClose, refugioId, cruzaId, cruzaLabel, onS
               </button>
               <button type="button" onClick={handleSubmit} disabled={submitting || !fechaPuesta}
                 style={{ height: 36, padding: "0 14px", borderRadius: 8, border: "none", backgroundColor: !fechaPuesta ? "#9a958f" : "#1a6560", fontFamily: "var(--font-dm-sans), DM Sans, sans-serif", fontSize: 12, fontWeight: 500, color: "#f9f9f7", cursor: !fechaPuesta ? "default" : "pointer", transition: "background-color 150ms" }}>
-                {submitting ? "Registrando..." : "Registrar puesta"}
+                {submitting ? <><Loader2 size={13} className="animate-spin" /> Registrando...</> : "Registrar puesta"}
               </button>
             </div>
           </motion.div>

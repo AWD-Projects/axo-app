@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { useSearchParams, useRouter } from "next/navigation"
 import { motion, AnimatePresence, useAnimate } from "framer-motion"
+import { Eye, EyeOff, Check, X, Clock, Loader2, ArrowLeft, ArrowRight, Lock } from "lucide-react"
 import { Logo } from "@/components/Logo"
 import { createClient } from "@/src/lib/supabase/client"
 
@@ -74,68 +75,6 @@ function cap(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
-
-function EyeIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  )
-}
-
-function EyeOffIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-      <line x1="1" y1="1" x2="23" y2="23" />
-    </svg>
-  )
-}
-
-function LockIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    </svg>
-  )
-}
-
-function CheckSmIcon({ color = "currentColor" }: { color?: string }) {
-  return (
-    <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-      <path d="M2 6l3 3 5-5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
-function CheckMdIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  )
-}
-
-function Spinner() {
-  return (
-    <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M21 12a9 9 0 1 1-6.219-8.56" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-function ClockLgIcon() {
-  return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
-    </svg>
-  )
-}
-
 // ── Expired view ──────────────────────────────────────────────────────────────
 
 function ExpiredTokenView() {
@@ -148,7 +87,7 @@ function ExpiredTokenView() {
         transition={{ duration: 0.4 }}
       >
         <div style={{ color: "#e5e2dc", display: "inline-block" }}>
-          <ClockLgIcon />
+          <Clock size={32} strokeWidth={1.5} />
         </div>
         <h2 className="mt-4 text-[20px] font-medium" style={{ color: "#0d0d0d" }}>
           Esta invitación expiró
@@ -243,7 +182,7 @@ function StepDot({ state, n }: { state: StepState; n: number }) {
             exit={{ scale: 0.5, opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <CheckSmIcon color="#f9f9f7" />
+            <Check size={10} color="#f9f9f7" strokeWidth={3} />
           </motion.div>
         ) : (
           <motion.span
@@ -327,7 +266,7 @@ function StepAForm({
           Tu cuenta quedará vinculada a la invitación de {inv.refugio.nombre}.
         </p>
         <div className="mt-2 flex items-center gap-1.5" style={{ color: "#9a958f" }}>
-          <LockIcon />
+          <Lock size={12} />
           <span className="text-[12px]">Registrándote como {inv.email}</span>
         </div>
       </div>
@@ -398,17 +337,16 @@ function StepAForm({
             onFocus={(e) => onFocus(e, "password")}
             onBlur={(e) => onBlur(e, "password")}
           />
-          <motion.button
+          <button
             type="button"
             tabIndex={-1}
             onClick={() => setShowPwd(!showPwd)}
             className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-5"
-            style={{ color: "#9a958f" }}
-            whileTap={{ scale: 0.8 }}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "#9a958f" }}
             aria-label={showPwd ? "Ocultar contraseña" : "Mostrar contraseña"}
           >
-            {showPwd ? <EyeOffIcon /> : <EyeIcon />}
-          </motion.button>
+            {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
         </div>
         <AnimatePresence>
           {error?.field === "password" && <FieldError message={error.message} />}
@@ -480,14 +418,12 @@ function StepAForm({
             >
               {matches ? (
                 <>
-                  <CheckSmIcon color="#15803d" />
+                  <Check size={10} color="#15803d" />
                   <span className="text-[10px]" style={{ color: "#15803d" }}>Coinciden</span>
                 </>
               ) : (
                 <>
-                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-                    <path d="M2 2l8 8M10 2l-8 8" stroke="#991b1b" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
+                  <X size={10} color="#991b1b" />
                   <span className="text-[10px]" style={{ color: "#991b1b" }}>No coinciden</span>
                 </>
               )}
@@ -535,11 +471,11 @@ function StepAForm({
           <AnimatePresence mode="wait">
             {isLoading ? (
               <motion.span key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
-                <Spinner /> Enviando código...
+                <Loader2 size={16} className="animate-spin" /> Enviando código...
               </motion.span>
             ) : (
-              <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                Continuar →
+              <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
+                Continuar <ArrowRight size={14} />
               </motion.span>
             )}
           </AnimatePresence>
@@ -821,11 +757,11 @@ function StepBForm({
                 animate={{ opacity: 1, scale: 1, transition: { type: "spring", stiffness: 300, damping: 20 } }}
                 className="flex items-center gap-2"
               >
-                <CheckMdIcon /> ¡Bienvenido a Axo!
+                <Check size={14} /> ¡Bienvenido a Axo!
               </motion.span>
             ) : isLoading ? (
               <motion.span key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
-                <Spinner /> Verificando...
+                <Loader2 size={16} className="animate-spin" /> Verificando...
               </motion.span>
             ) : (
               <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -841,12 +777,12 @@ function StepBForm({
         <button
           type="button"
           onClick={onBack}
-          className="text-[12px] transition-colors duration-150"
+          className="inline-flex items-center gap-1 text-[12px] transition-colors duration-150"
           style={{ color: "#9a958f", background: "none", border: "none", cursor: "pointer" }}
           onMouseEnter={(e) => (e.currentTarget.style.color = "#3c3a36")}
           onMouseLeave={(e) => (e.currentTarget.style.color = "#9a958f")}
         >
-          ← Volver y corregir mis datos
+          <ArrowLeft size={14} /> Volver y corregir mis datos
         </button>
       </div>
     </form>
@@ -901,7 +837,7 @@ export function InviteNewClient() {
         if (data.error) {
           setTokenStatus(data.code === "USED" ? "used" : "expired")
         } else {
-          setInv(data)
+          setInv(data.data)
           setTokenStatus("valid")
         }
       })
@@ -1040,7 +976,7 @@ export function InviteNewClient() {
         inputs.forEach((input: Element, i: number) => {
           animateOtp(input, { scale: [1, 1.12, 0.95, 1] }, { duration: 0.4, delay: i * 0.04 })
         })
-        setTimeout(() => router.push("/onboarding"), 1200)
+        setTimeout(() => router.push("/dashboard"), 1200)
       } else if (data.code === "WRONG_OTP") {
         const left = data.attempts_left ?? 0
         setOtpStatus("wrong")

@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
-import { X, Search, CheckCircle, AlertTriangle, XCircle, Sparkles } from "lucide-react"
+import { X, Search, CheckCircle, AlertTriangle, XCircle, Sparkles, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -313,12 +314,13 @@ export function PlanearCruzaModal({ open, onClose, refugioId, onSuccess }: Plane
         }),
       })
       const body = await res.json()
-      if (!res.ok) { setSubmitError(body.error ?? "Error al crear la cruza"); return }
+      if (!res.ok) { setSubmitError(body.error ?? "Error al crear la cruza"); toast.error(body.error ?? "Error al crear la cruza"); return }
+      toast.success("Cruza planeada")
       onSuccess()
       onClose()
       router.push(`/dashboard/reproduccion/${body.data.id}`)
     } catch {
-      setSubmitError("Error de red al crear la cruza")
+      setSubmitError("Error de red al crear la cruza"); toast.error("Error de red al crear la cruza")
     } finally {
       setSubmitting(false)
     }
@@ -475,7 +477,7 @@ export function PlanearCruzaModal({ open, onClose, refugioId, onSuccess }: Plane
               </button>
               <button type="button" onClick={handleSubmit} disabled={!canSubmit}
                 style={{ height: 36, padding: "0 14px", borderRadius: 8, border: isAlto ? "0.5px solid #fca5a5" : "none", backgroundColor: isAlto ? "transparent" : (canSubmit ? "#1a6560" : "#9a958f"), fontFamily: "var(--font-dm-sans), DM Sans, sans-serif", fontSize: 12, fontWeight: 500, color: isAlto ? "#991b1b" : "#f9f9f7", cursor: canSubmit ? "pointer" : "default", transition: "background-color 150ms" }}>
-                {submitting ? "Creando cruza..." : isAlto ? "Planear de todas formas" : "Planear cruza →"}
+                {submitting ? <><Loader2 size={13} className="animate-spin" /> Creando cruza...</> : isAlto ? "Planear de todas formas" : "Planear cruza →"}
               </button>
             </div>
           </motion.div>
