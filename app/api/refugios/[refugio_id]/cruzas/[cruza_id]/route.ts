@@ -14,10 +14,18 @@ export async function GET(
     .from("cruzas")
     .select(`
       *,
-      hembra:hembra_id(id, codigo, nombre, madre_id, padre_id),
-      macho:macho_id(id, codigo, nombre, madre_id, padre_id),
+      hembra:hembra_id(
+        id, codigo, nombre, morfotipo,
+        madre:madre_id(id, codigo),
+        padre:padre_id(id, codigo)
+      ),
+      macho:macho_id(
+        id, codigo, nombre, morfotipo,
+        madre:madre_id(id, codigo),
+        padre:padre_id(id, codigo)
+      ),
       estanques(id, nombre),
-      puestas(*)
+      puestas(*, lote:lote_id(id, codigo, etapa, cantidad_actual, cantidad_inicial, fecha_inicio))
     `)
     .eq("id", params.cruza_id)
     .eq("refugio_id", params.refugio_id)

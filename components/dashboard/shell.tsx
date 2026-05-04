@@ -9,7 +9,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     <RefugioProvider>
       <div style={{ backgroundColor: "#f9f9f7", minHeight: "100vh" }}>
         <DockSidebar />
-        <main className="lg:ml-[244px] pt-[52px] lg:pt-8 lg:pr-4 lg:pb-4 px-4 pb-4 lg:pl-0">
+        <main className="lg:ml-[244px] pt-[52px] lg:pt-8 lg:pr-6 lg:pb-6 px-4 pb-4 lg:pl-6">
           {children}
         </main>
         <AxoAIFloat />

@@ -116,10 +116,11 @@ function eventoIconColor(tipo: string): { icon: React.ElementType; color: string
 function waterStatus(param: string, value: number | null): "ok" | "warn" | "error" {
   if (value === null) return "ok"
   switch (param) {
-    case "temperatura": return value >= 14 && value <= 20 ? "ok" : value >= 10 && value <= 23 ? "warn" : "error"
-    case "ph":          return value >= 6.8 && value <= 7.8 ? "ok" : value >= 6.5 && value <= 8.5 ? "warn" : "error"
-    case "amonio":      return value < 0.25 ? "ok" : value < 1.0 ? "warn" : "error"
-    case "oxigeno":     return value >= 6 ? "ok" : value >= 4 ? "warn" : "error"
+    case "temperatura": return value >= 14 && value <= 22 ? "ok" : value >= 12 && value <= 25 ? "warn" : "error"
+    case "ph":          return value >= 7.0 && value <= 8.0 ? "ok" : value >= 6.5 && value <= 8.5 ? "warn" : "error"
+    case "amonio":      return value <= 0.25 ? "ok" : value <= 1.0 ? "warn" : "error"
+    case "nitrito":     return value <= 0.2 ? "ok" : value <= 0.5 ? "warn" : "error"
+    case "oxigeno":     return value >= 6.0 ? "ok" : value >= 4.0 ? "warn" : "error"
     default:            return "ok"
   }
 }
