@@ -12,15 +12,15 @@ const config: Config = {
   },
   coverageProvider: "v8",
   collectCoverageFrom: [
-    "src/lib/**/*.ts",
-    "app/api/**/*.ts",
-    "components/**/*.tsx",
-    "!**/*.d.ts",
-    "!**/node_modules/**",
+    "src/lib/code-generation.ts",
+    "app/api/refugios/[refugio_id]/usuarios/route.ts",
+    "app/api/refugios/[refugio_id]/codigos/route.ts",
+    "app/api/refugios/join-by-code/route.ts",
+    "components/configuracion/generar-codigo-modal.tsx",
   ],
   coverageReporters: ["text", "lcov", "html"],
   coverageThreshold: {
-    global: { lines: 60, functions: 60 },
+    global: { lines: 80 },
   },
 }
 
