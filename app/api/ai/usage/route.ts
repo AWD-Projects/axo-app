@@ -1,6 +1,5 @@
 import { createClient } from "@/src/lib/supabase/server"
 import { NextResponse } from "next/server"
-import { LIMITES_AI } from "@/src/lib/ai/limits"
 
 export async function GET(request: Request) {
   const supabase = createClient()
@@ -27,23 +26,28 @@ export async function GET(request: Request) {
     .eq("id", refugio_id)
     .single()
 
-  const mesActual = new Date().toISOString().slice(0, 7) + "-01"
-  const { data: uso } = await supabase
-    .from("axo_ai_uso_mensual")
-    .select("consultas_realizadas, tokens_input_total, tokens_output_total")
-    .eq("refugio_id", refugio_id)
-    .eq("mes", mesActual)
-    .single()
+  const plan = refugio?.plan ?? "pionero"
 
-  const plan = (refugio?.plan ?? "pionero") as keyof typeof LIMITES_AI
-  const limite = LIMITES_AI[plan]
+  const [{ data: planConfig }, { data: uso }] = await Promise.all([
+    (supabase
+      .from("plan_configuracion" as never)
+      .select("limite_consultas_ai")
+      .eq("plan", plan)
+      .single() as unknown as Promise<{ data: { limite_consultas_ai: number | null } | null; error: unknown }>),
+    supabase
+      .from("axo_ai_uso_mensual")
+      .select("consultas_realizadas, tokens_input_total, tokens_output_total")
+      .eq("refugio_id", refugio_id)
+      .eq("mes", new Date().toISOString().slice(0, 7) + "-01")
+      .single(),
+  ])
 
   return NextResponse.json({
     data: {
-      mes: mesActual,
+      mes: new Date().toISOString().slice(0, 7) + "-01",
       plan,
       consultas_realizadas: uso?.consultas_realizadas ?? 0,
-      limite: limite === Infinity ? null : limite,
+      limite: planConfig?.limite_consultas_ai ?? null,
       tokens_input_total: uso?.tokens_input_total ?? 0,
       tokens_output_total: uso?.tokens_output_total ?? 0,
     }

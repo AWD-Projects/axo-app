@@ -2,7 +2,6 @@ import { createClient } from "@/src/lib/supabase/server"
 import { createAdminClient } from "@/src/lib/supabase/admin"
 import Anthropic from "@anthropic-ai/sdk"
 import { NextResponse } from "next/server"
-import { LIMITES_AI } from "@/src/lib/ai/limits"
 import { buildAgentTools, executeTool } from "@/src/lib/ai/tools"
 import type { Json } from "@/src/types/database"
 
@@ -36,10 +35,17 @@ export async function POST(
 
   if (!refugio) return NextResponse.json({ error: "Refugio no encontrado" }, { status: 404 })
 
-  const limite = LIMITES_AI[refugio.plan as keyof typeof LIMITES_AI]
+  const { data: planConfig } = await supabase
+    .from("plan_configuracion" as never)
+    .select("limite_consultas_ai")
+    .eq("plan", refugio.plan)
+    .single() as { data: { limite_consultas_ai: number | null } | null; error: unknown }
+
+  const limite = planConfig?.limite_consultas_ai ?? null // null = ilimitado, 0 = sin acceso
+
   if (limite === 0) return NextResponse.json({ error: "El plan Regulador no tiene acceso a Axo AI" }, { status: 403 })
 
-  if (limite !== Infinity) {
+  if (limite !== null) {
     const mesActual = new Date().toISOString().slice(0, 7) + "-01"
     const { data: uso } = await supabase
       .from("axo_ai_uso_mensual")
@@ -78,45 +84,76 @@ export async function POST(
 
   const systemPrompt = buildSystemPrompt(refugio, perfil, membership.rol)
   const tools = buildAgentTools()
-
-  let response = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 2048,
-    system: systemPrompt,
-    tools,
-    messages,
-  })
-
-  const allToolCalls: Json[] = []
-  const allToolResults: Json[] = []
   const admin = createAdminClient()
 
-  while (response.stop_reason === "tool_use") {
-    const toolUseBlocks = response.content.filter((b): b is Anthropic.ToolUseBlock => b.type === "tool_use")
+  // Save user message first — always persisted regardless of what happens next
+  await admin.from("axo_ai_mensajes").insert({
+    conversacion_id: params.conv_id, refugio_id, rol: "user" as const, contenido: mensaje,
+  })
+  await admin.from("axo_ai_conversaciones")
+    .update({ updated_at: new Date().toISOString() })
+    .eq("id", params.conv_id)
 
-    const toolResults: Anthropic.ToolResultBlockParam[] = await Promise.all(
-      toolUseBlocks.map(async (toolUse) => {
-        const result = await executeTool(admin, refugio_id, user.id, toolUse.name, toolUse.input as Record<string, unknown>)
-        allToolCalls.push({ name: toolUse.name, input: toolUse.input } as Json)
-        allToolResults.push({ tool: toolUse.name, result } as Json)
-        return {
-          type: "tool_result" as const,
-          tool_use_id: toolUse.id,
-          content: JSON.stringify(result),
-        }
-      })
-    )
+  const saveErrorAndReturn = async (friendlyMsg: string, status: number) => {
+    await admin.from("axo_ai_mensajes").insert({
+      conversacion_id: params.conv_id, refugio_id, rol: "assistant" as const,
+      contenido: friendlyMsg,
+    })
+    return NextResponse.json({ error: friendlyMsg }, { status })
+  }
 
-    messages.push({ role: "assistant", content: response.content })
-    messages.push({ role: "user", content: toolResults })
-
+  let response: Awaited<ReturnType<typeof anthropic.messages.create>>
+  try {
     response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 2048,
       system: systemPrompt,
       tools,
       messages,
     })
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : ""
+    const friendlyMsg = msg.includes("credit balance")
+      ? "El servicio de IA no está disponible en este momento. Contacta al administrador."
+      : msg.includes("too long") || msg.includes("context")
+      ? "La conversación es demasiado larga. Inicia una nueva conversación."
+      : "No se pudo procesar tu consulta. Intenta de nuevo en unos momentos."
+    return saveErrorAndReturn(friendlyMsg, 503)
+  }
+
+  const allToolCalls: Json[] = []
+  const allToolResults: Json[] = []
+
+  try {
+    while (response.stop_reason === "tool_use") {
+      const toolUseBlocks = response.content.filter((b): b is Anthropic.ToolUseBlock => b.type === "tool_use")
+
+      const toolResults: Anthropic.ToolResultBlockParam[] = await Promise.all(
+        toolUseBlocks.map(async (toolUse) => {
+          const result = await executeTool(admin, refugio_id, user.id, toolUse.name, toolUse.input as Record<string, unknown>)
+          allToolCalls.push({ name: toolUse.name, input: toolUse.input } as Json)
+          allToolResults.push({ tool: toolUse.name, result } as Json)
+          return {
+            type: "tool_result" as const,
+            tool_use_id: toolUse.id,
+            content: JSON.stringify(result),
+          }
+        })
+      )
+
+      messages.push({ role: "assistant", content: response.content })
+      messages.push({ role: "user", content: toolResults })
+
+      response = await anthropic.messages.create({
+        model: "claude-sonnet-4-6",
+        max_tokens: 2048,
+        system: systemPrompt,
+        tools,
+        messages,
+      })
+    }
+  } catch {
+    return saveErrorAndReturn("Error al ejecutar herramientas del agente. Intenta de nuevo.", 503)
   }
 
   const textoFinal = response.content
@@ -128,9 +165,6 @@ export async function POST(
   const tokensOutput = response.usage.output_tokens
 
   await admin.from("axo_ai_mensajes").insert({
-    conversacion_id: params.conv_id, refugio_id, rol: "user" as const, contenido: mensaje,
-  })
-  await admin.from("axo_ai_mensajes").insert({
     conversacion_id: params.conv_id, refugio_id, rol: "assistant" as const,
     contenido: textoFinal,
     tool_calls: allToolCalls.length > 0 ? allToolCalls as Json : null,
@@ -138,10 +172,6 @@ export async function POST(
     tokens_input: tokensInput,
     tokens_output: tokensOutput,
   })
-
-  await admin.from("axo_ai_conversaciones")
-    .update({ updated_at: new Date().toISOString() })
-    .eq("id", params.conv_id)
 
   const mesActual = new Date().toISOString().slice(0, 7) + "-01"
   await admin.rpc("increment_ai_usage", {
