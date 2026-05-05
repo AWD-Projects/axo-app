@@ -1,4 +1,9 @@
+import type { Metadata } from "next"
 import { RefugioProvider } from "@/src/context/refugio-context"
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 
 export default function AxoAILayout({ children }: { children: React.ReactNode }) {
   return (

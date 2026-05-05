@@ -15,10 +15,74 @@ const dmMono = DM_Mono({
   variable: "--font-dm-mono",
 })
 
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://axo.amoxtli.tech"
+
 export const metadata: Metadata = {
-  title: "Axo — El sistema operativo de tu refugio de ajolote",
+  metadataBase: new URL(BASE_URL),
+  title: {
+    default: "Axo — El sistema operativo de tu refugio de ajolote",
+    template: "%s | Axo",
+  },
   description:
-    "La plataforma técnica diseñada para la preservación científica. Automatice sus bitácoras de la UMA, controle el coeficiente de endogamia y gestione la salud de su colonia.",
+    "La plataforma técnica diseñada para la preservación científica del Ambystoma mexicanum. Automatice bitácoras de la UMA, controle el coeficiente de endogamia y gestione la salud de su colonia.",
+  keywords: [
+    "refugio ajolote",
+    "Ambystoma mexicanum",
+    "gestión UMA",
+    "SEMARNAT",
+    "ajolote cautiverio",
+    "bitácora UMA",
+    "gestión colonia ajolote",
+    "trazabilidad genealógica",
+    "conservación axolote",
+    "reportes SEMARNAT",
+    "amoxtli",
+    "axo app",
+  ],
+  authors: [{ name: "Amoxtli", url: BASE_URL }],
+  creator: "Amoxtli",
+  publisher: "Amoxtli",
+  alternates: {
+    canonical: BASE_URL,
+    languages: { "es-MX": BASE_URL },
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_MX",
+    url: BASE_URL,
+    siteName: "Axo",
+    title: "Axo — El sistema operativo de tu refugio de ajolote",
+    description:
+      "La plataforma técnica diseñada para la preservación científica del Ambystoma mexicanum. Registros operativos, trazabilidad genealógica y reportes regulatorios automatizados.",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Axo — Gestión de refugios de ajolote",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Axo — El sistema operativo de tu refugio de ajolote",
+    description:
+      "La plataforma técnica diseñada para la preservación científica del Ambystoma mexicanum.",
+    images: ["/opengraph-image"],
+    creator: "@amoxtlitech",
+    site: "@amoxtlitech",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  category: "technology",
 }
 
 export default function RootLayout({
