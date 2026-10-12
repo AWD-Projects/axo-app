@@ -1,88 +1,49 @@
-"use client"
-
 import Link from "next/link"
 import { Logo } from "@/components/Logo"
 
-const plataforma = [
-  { label: "Características", href: "/#caracteristicas" },
+const enlaces = [
+  { label: "Cómo funciona", href: "/#producto" },
   { label: "Planes", href: "/#planes" },
-  { label: "Casos de uso", href: "/#casos" },
   { label: "Iniciar sesión", href: "/auth/login" },
+  { label: "Crear cuenta", href: "/auth/register" },
 ]
 
-const compania = [
-  { label: "Sobre Axo", href: "/about" },
-  { label: "AMOXTLI", href: "https://amoxtli.tech" },
-  { label: "Contacto", href: "mailto:hola@amoxtli.tech" },
-  { label: "Privacidad", href: "/privacidad" },
-]
+const link =
+  "text-[13px] text-white/70 transition-colors duration-150 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-xs"
 
 export function Footer() {
   return (
-    <footer className="bg-text-primary border-t border-white/10 px-4 sm:px-6 py-12 sm:py-16">
-      <div className="max-w-inner mx-auto">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 sm:gap-12 mb-10 sm:mb-12">
-          {/* Brand — full width on xs, first col on sm+ */}
-          <div className="col-span-2 sm:col-span-1">
-            <div className="mb-3">
-              <Logo variant="light" size="sm" />
-            </div>
-            <p className="text-[13px] text-white/40 leading-relaxed font-sans max-w-[220px]">
+    <footer className="bg-text-primary px-4 py-12 sm:px-6 sm:py-16">
+      <div className="mx-auto max-w-inner">
+        <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
+          <div>
+            <Logo variant="light" size="sm" />
+            <p className="mt-4 max-w-[280px] text-body text-white/70">
               Gestión operativa para refugios de Ambystoma mexicanum en cautiverio.
             </p>
           </div>
-
-          {/* Plataforma */}
-          <div>
-            <p className="text-[10px] font-medium tracking-[0.14em] uppercase text-white/30 mb-4 font-sans">
-              Plataforma
-            </p>
-            <ul className="space-y-2.5">
-              {plataforma.map((item) => (
-                <li key={item.label}>
-                  <Link
-                    href={item.href}
-                    className="text-[13px] text-white/50 hover:text-white/80 transition-colors duration-150 font-sans"
-                  >
-                    {item.label}
+          <nav aria-label="Pie de página">
+            <ul className="flex flex-col gap-3 md:flex-row md:gap-8">
+              {enlaces.map((e) => (
+                <li key={e.label}>
+                  <Link href={e.href} className={link}>
+                    {e.label}
                   </Link>
                 </li>
               ))}
+              <li>
+                <a href="mailto:hello@amoxtli.tech" className={link}>
+                  Contacto
+                </a>
+              </li>
             </ul>
-          </div>
-
-          {/* Compañía */}
-          <div>
-            <p className="text-[10px] font-medium tracking-[0.14em] uppercase text-white/30 mb-4 font-sans">
-              Compañía
-            </p>
-            <ul className="space-y-2.5">
-              {compania.map((item) => (
-                <li key={item.label}>
-                  <Link
-                    href={item.href}
-                    className="text-[13px] text-white/50 hover:text-white/80 transition-colors duration-150 font-sans"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          </nav>
         </div>
-
-        <div className="border-t border-white/10 pt-6 sm:pt-8 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
-          <p className="text-[12px] text-white/25 font-sans text-center sm:text-left">
-            © 2026 AMOXTLI. Todos los derechos reservados.
-          </p>
-          <div className="flex items-center gap-6">
-            <Link href="https://github.com/AWD-Projects" className="text-[12px] text-white/30 hover:text-white/60 transition-colors duration-150 font-sans">
-              GitHub
-            </Link>
-            <Link href="https://amoxtli.tech" className="text-[12px] text-white/30 hover:text-white/60 transition-colors duration-150 font-sans">
-              amoxtli.tech
-            </Link>
-          </div>
+        <div className="mt-10 flex flex-col gap-2 border-t-[0.5px] border-white/15 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-small text-white/60">© 2026 AMOXTLI</p>
+          <a href="https://amoxtli.tech" className={`${link} !text-[12px]`}>
+            Un producto de AMOXTLI
+          </a>
         </div>
       </div>
     </footer>

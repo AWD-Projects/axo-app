@@ -1,70 +1,68 @@
 "use client"
 
 import Link from "next/link"
-import { motion, useScroll, useTransform } from "framer-motion"
+import { useEffect, useState } from "react"
 import { Logo } from "@/components/Logo"
 
 const navLinks = [
-  { label: "Producto",     href: "#caracteristicas" },
-  { label: "Precios",      href: "#planes" },
-  { label: "Casos de uso", href: "#casos" },
-  { label: "Para quién",   href: "#audiencia" },
+  { label: "Cómo funciona", href: "#producto" },
+  { label: "Axo AI", href: "#ai" },
+  { label: "Para quién", href: "#audiencia" },
+  { label: "Planes", href: "#planes" },
 ]
 
 export function Navbar() {
-  const { scrollY } = useScroll()
-  const borderOpacity = useTransform(scrollY, [0, 60], [0, 1])
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
 
   return (
-    <motion.header
-      className="fixed top-0 left-0 right-0 z-50 h-[68px] flex items-center"
-      style={{
-        backgroundColor: "rgba(249,249,247,0.92)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        borderBottom: "0.5px solid",
-        borderColor: borderOpacity.get() > 0.1 ? "#e5e2dc" : "transparent",
-      }}
+    <header
+      className={`fixed inset-x-0 top-0 z-50 flex h-[64px] items-center bg-bg-app/95 backdrop-blur-sm border-b-[0.5px] transition-colors duration-150 motion-reduce:transition-none ${
+        scrolled ? "border-border" : "border-transparent"
+      }`}
     >
-      <div className="w-full max-w-inner mx-auto px-4 sm:px-6 grid grid-cols-[auto_1fr_auto] items-center gap-6">
-
-        {/* Logo */}
-        <Link href="/" className="flex items-center">
+      <div className="mx-auto flex w-full max-w-inner items-center justify-between gap-6 px-4 sm:px-6">
+        <Link
+          href="/"
+          aria-label="Axo, inicio"
+          className="flex h-11 items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg-app rounded-xs"
+        >
           <Logo variant="dark" size="sm" />
         </Link>
 
-        {/* Nav — centered */}
-        <nav className="hidden md:flex items-center justify-center gap-7">
+        <nav aria-label="Principal" className="hidden items-center gap-7 md:flex">
           {navLinks.map((link) => (
             <Link
-              key={link.label}
+              key={link.href}
               href={link.href}
-              className="text-[13px] text-text-secondary hover:text-text-primary transition-colors duration-150 font-sans"
+              className="text-[13px] text-text-secondary transition-colors duration-150 hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-xs"
             >
               {link.label}
             </Link>
           ))}
         </nav>
-        <div className="md:hidden" />
 
-        {/* CTA */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-4">
           <Link
             href="/auth/login"
-            className="hidden sm:block text-[13px] font-medium text-text-secondary hover:text-text-primary transition-colors duration-150 font-sans"
+            className="inline-flex h-11 items-center px-2 text-[13px] font-medium text-text-secondary transition-colors duration-150 hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-xs"
           >
             Iniciar sesión
           </Link>
-          <div className="hidden sm:block w-px h-4 bg-border" />
           <Link
             href="/auth/register"
-            className="inline-flex items-center justify-center h-8 px-4 text-[12px] font-medium font-sans bg-text-primary text-accent-text hover:bg-text-primary/90 rounded-sm transition-all duration-150 active:scale-[0.98]"
+            className="inline-flex h-9 items-center justify-center rounded-sm bg-text-primary px-4 text-[12px] font-medium text-accent-text transition-colors duration-150 hover:bg-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg-app"
           >
             Crear cuenta
           </Link>
         </div>
-
       </div>
-    </motion.header>
+    </header>
   )
 }

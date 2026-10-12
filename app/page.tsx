@@ -1,13 +1,11 @@
 import type { Metadata } from "next"
 import { Navbar } from "./(landing)/components/Navbar"
 import { Hero } from "./(landing)/components/Hero"
-import { LogosBar } from "./(landing)/components/LogosBar"
-import { Features } from "./(landing)/components/Features"
-import { Problem } from "./(landing)/components/Problem"
+import { Cambio } from "./(landing)/components/Cambio"
+import { Bitacora } from "./(landing)/components/Bitacora"
 import { AISection } from "./(landing)/components/AISection"
-import { CaseStudy } from "./(landing)/components/CaseStudy"
 import { Audience } from "./(landing)/components/Audience"
-import { Pricing } from "./(landing)/components/Pricing"
+import { Pricing, PLANES } from "./(landing)/components/Pricing"
 import { CTA } from "./(landing)/components/CTA"
 import { Footer } from "./(landing)/components/Footer"
 
@@ -26,34 +24,34 @@ const jsonLd = {
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
       url: BASE_URL,
+      inLanguage: "es-MX",
       description:
-        "Sistema de gestión operativa para refugios de Ambystoma mexicanum (ajolote) en cautiverio. Automatiza bitácoras de UMA, trazabilidad genealógica y reportes SEMARNAT.",
-      offers: {
+        "Sistema de gestión operativa para refugios de Ambystoma mexicanum (ajolote) en cautiverio. Bitácora diaria, trazabilidad genealógica con coeficiente de endogamia y reportes de UMA.",
+      offers: PLANES.map((p) => ({
         "@type": "Offer",
-        price: "0",
+        name: p.nombre,
         priceCurrency: "MXN",
-        description: "Plan gratuito disponible",
-      },
-      publisher: {
-        "@type": "Organization",
-        name: "Amoxtli",
-        url: BASE_URL,
-      },
+        priceSpecification: {
+          "@type": "UnitPriceSpecification",
+          price: p.precio,
+          priceCurrency: "MXN",
+          billingDuration: 1,
+          unitCode: "MON",
+        },
+      })),
+      publisher: { "@id": `${BASE_URL}/#amoxtli` },
     },
     {
       "@type": "Organization",
-      name: "Amoxtli",
-      url: BASE_URL,
-      description: "Tecnología para la conservación del Ambystoma mexicanum.",
+      "@id": `${BASE_URL}/#amoxtli`,
+      name: "AMOXTLI",
+      url: "https://amoxtli.tech",
     },
     {
       "@type": "WebSite",
       name: "Axo",
       url: BASE_URL,
-      potentialAction: {
-        "@type": "SearchAction",
-        target: `${BASE_URL}/auth/login`,
-      },
+      inLanguage: "es-MX",
     },
   ],
 }
@@ -65,22 +63,23 @@ export default function LandingPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <main className="bg-bg-app min-h-screen">
-        <Navbar />
-        {/* Hero + LogosBar fill exactly 100vh */}
-        <div className="h-screen pt-[68px] flex flex-col">
-          <Hero />
-          <LogosBar />
-        </div>
-        <Features />
-        <Problem />
+      <a
+        href="#contenido"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-sm focus:bg-bg-card focus:px-4 focus:py-2 focus:text-[13px] focus:text-text-primary focus:ring-2 focus:ring-accent"
+      >
+        Saltar al contenido
+      </a>
+      <Navbar />
+      <main id="contenido" className="min-h-screen bg-bg-app">
+        <Hero />
+        <Cambio />
+        <Bitacora />
         <AISection />
-        <CaseStudy />
         <Audience />
         <Pricing />
         <CTA />
-        <Footer />
       </main>
+      <Footer />
     </>
   )
 }

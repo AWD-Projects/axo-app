@@ -792,7 +792,31 @@ No se implementa en el MVP. El producto es 100% light mode con la paleta de fond
 
 ---
 
-*AMOXTLI · Axo Design System v1.0 · Mayo 2026*
+## v1.1 — Landing y acceso (Octubre 2026)
+
+Alcance: `app/page.tsx`, `app/(landing)/components/*`, `app/auth/login`, `app/auth/register`. El panel (`/dashboard`) no cambia.
+
+**Decisión:** la landing y el acceso vuelven a respetar v1.0 sin excepciones. Se retiran el hero con gradientes, malla, ruido y viñeta, el panel oscuro de acceso y los fondos oscuros de la landing salvo el footer.
+
+### Pieza firma: diagrama de pedigrí
+- Nodos en DM Mono: hembra = píldora, macho = rectángulo `rounded-xs`.
+- Teal marca el linaje que lleva a un ancestro común; el ancestro común va relleno.
+- El coeficiente se muestra en DM Mono, con etiqueta de riesgo (texto + color, nunca solo color).
+
+### Reglas añadidas
+- Valores medibles (coeficientes, precios, rangos) en DM Mono.
+- Texto secundario mínimo `text-secondary` (#3c3a36). `text-disabled` (#9a958f) no cumple 4.5:1 y no se usa para texto que deba leerse.
+- Inputs a 16px en móvil (evita zoom de iOS) y 13px desde `sm`.
+- Objetivos táctiles de al menos 40px en móvil.
+- Entradas al hacer scroll: opacidad y 12px de desplazamiento, 400ms, desactivadas con `prefers-reduced-motion`. El contenido es visible sin JavaScript.
+- Una sola superficie `bg-subtle` alterna por sección para separar ritmo; sin tarjetas con sombra.
+
+### Contenido
+Sin logotipos de instituciones, citas ni cifras sin fuente. Datos de ejemplo etiquetados como tales.
+
+---
+
+*AMOXTLI · Axo Design System v1.1 · Octubre 2026 (v1.0 · Mayo 2026)*
 *Responsable: Salomón Martínez · CEO AMOXTLI*
 *Este documento es la fuente de verdad para todas las decisiones de diseño de Axo.*
 *Modificaciones requieren versionado explícito (v1.1, v2.0).*

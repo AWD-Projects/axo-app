@@ -1,84 +1,73 @@
-"use client"
+import { COLONIA_EJEMPLO, crearCalculadora, nivelRiesgo, formatoCoeficiente, type Nivel } from "@/src/lib/pedigree"
+import { Reveal } from "./Reveal"
 
-import { motion } from "framer-motion"
-import { ArrowRight } from "lucide-react"
+const HEMBRA = "A-11"
+const calc = crearCalculadora(COLONIA_EJEMPLO)
+const filas = Object.values(COLONIA_EJEMPLO)
+  .filter((i) => i.sexo === "M" && !i.id.startsWith("F-"))
+  .map((m) => ({ id: m.id, coef: calc.coeficienteCruza(HEMBRA, m.id) }))
+  .map((f) => ({ ...f, nivel: nivelRiesgo(f.coef) }))
+  .sort((a, b) => a.coef - b.coef)
+const mejor = filas[0]
 
-const tableData = [
-  { candidato: "M-102 (Neu.)", coef: "0.002", riesgo: "Bajo", ok: true },
-  { candidato: "M-084 (Mel.)", coef: "0.016", riesgo: "Bajo", ok: true },
-  { candidato: "M-195 (Leuc.)", coef: "0.048", riesgo: "Moderado", ok: false },
-]
+const ETIQUETA: Record<Nivel, { t: string; c: string }> = {
+  bajo: { t: "Bajo", c: "bg-success-bg text-success" },
+  precaucion: { t: "Precaución", c: "bg-warning-bg text-warning" },
+  alto: { t: "Alto", c: "bg-error-bg text-error" },
+}
 
 export function AISection() {
   return (
-    <section className="py-16 sm:py-24 px-4 sm:px-6 border-t border-border">
-      <div className="max-w-inner mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-        {/* Left */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.55 }}
-        >
-          <h2 className="text-[clamp(24px,4vw,40px)] font-medium text-text-primary leading-[1.15] mb-6 sm:mb-8 font-sans">
-            Tu agente de inteligencia, con datos reales de tu colonia.
+    <section id="ai" className="border-t-[0.5px] border-border px-4 py-16 sm:px-6 sm:py-24">
+      <div className="mx-auto grid max-w-inner grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16">
+        <Reveal>
+          <h2 className="text-balance text-[clamp(24px,3.4vw,36px)] font-medium leading-[1.15] text-text-primary">
+            Pregúntale a tu colonia en lugar de buscar en tablas.
           </h2>
-          <ul className="space-y-3 sm:space-y-4">
-            {[
-              "Predicción de salud poblacional",
-              "Optimización de cruzas genéticas",
-              "Alertas tempranas de parámetros críticos",
-            ].map((item) => (
-              <li key={item} className="flex items-center gap-3">
-                <ArrowRight size={14} className="text-accent flex-shrink-0" />
-                <span className="text-[14px] text-text-secondary font-sans">{item}</span>
-              </li>
-            ))}
-          </ul>
-        </motion.div>
+          <p className="mt-4 max-w-[460px] text-body-l text-text-secondary">
+            Axo AI responde con los registros de tu refugio. Si una respuesta implica escribir un
+            evento, te pide confirmación antes de guardarlo.
+          </p>
+        </Reveal>
 
-        {/* Right — AI chat mockup */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.55, delay: 0.1 }}
-          className="bg-bg-card border border-border rounded-md p-4 sm:p-6 overflow-hidden"
-          style={{ boxShadow: "0 4px 16px rgba(13,13,13,0.06), 0 1px 4px rgba(13,13,13,0.04)" }}
-        >
-          {/* User message */}
-          <div className="flex justify-end mb-4">
-            <div className="bg-accent-bg text-text-primary text-[12px] sm:text-[13px] leading-relaxed px-3 sm:px-4 py-2.5 rounded-[10px_10px_2px_10px] max-w-[90%] font-sans">
-              ¿Qué machos de la pecera 8 no tienen relación de linaje directa con la hembra I-7?
+        <Reveal delay={0.05}>
+          <div className="rounded-lg border-[0.5px] border-border bg-bg-card p-4 sm:p-6">
+            <p className="mb-3 text-small text-text-secondary">Ejemplo con la colonia ficticia</p>
+            <div className="mb-5 flex justify-end">
+              <p className="max-w-[88%] rounded-md bg-accent-bg px-4 py-2.5 text-body text-text-primary">
+                ¿Con qué macho puedo cruzar a {HEMBRA}?
+              </p>
             </div>
-          </div>
-
-          {/* AI response header */}
-          <div className="mb-3">
-            <span className="text-[10px] font-medium text-accent font-sans block mb-1">Axo AI</span>
-            <p className="text-[12px] sm:text-[13px] text-text-secondary leading-relaxed font-sans">
-              He encontrado 3 candidatos óptimos con coeficiente de endogamia bajo:
+            <p className="text-label text-accent">Axo AI</p>
+            <p className="mt-1 mb-3 text-body text-text-secondary">
+              {mejor.id} es la mejor opción ({formatoCoeficiente(mejor.coef)}). Estos son los tres machos
+              disponibles:
             </p>
+            <table className="w-full border-collapse overflow-hidden rounded-xs border-[0.5px] border-border text-left">
+              <caption className="sr-only">Coeficiente de endogamia por macho para {HEMBRA}</caption>
+              <thead>
+                <tr className="bg-bg-app text-small text-text-secondary">
+                  <th scope="col" className="px-3 py-2 font-normal">Macho</th>
+                  <th scope="col" className="px-3 py-2 font-normal">Coeficiente</th>
+                  <th scope="col" className="px-3 py-2 text-right font-normal">Riesgo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filas.map((f) => (
+                  <tr key={f.id} className="border-t-[0.5px] border-border">
+                    <th scope="row" className="px-3 py-2 font-mono text-[12px] font-normal text-accent">{f.id}</th>
+                    <td className="px-3 py-2 font-mono text-[12px] text-text-primary">{formatoCoeficiente(f.coef)}</td>
+                    <td className="px-3 py-2 text-right">
+                      <span className={`inline-block rounded-xs px-2 py-1 text-small ${ETIQUETA[f.nivel].c}`}>
+                        {ETIQUETA[f.nivel].t}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-
-          {/* Results table */}
-          <div className="border border-border rounded-xs overflow-hidden">
-            <div className="grid grid-cols-3 bg-bg-app px-2 sm:px-3 py-2 border-b border-border">
-              {["Candidato", "Coef.", "Riesgo"].map((h) => (
-                <span key={h} className="text-[9px] sm:text-[10px] font-medium uppercase tracking-wide text-text-disabled font-sans">{h}</span>
-              ))}
-            </div>
-            {tableData.map((row) => (
-              <div key={row.candidato} className="grid grid-cols-3 px-2 sm:px-3 py-2 border-b border-border last:border-0 hover:bg-bg-app transition-colors duration-100">
-                <span className="text-[10px] sm:text-[12px] font-mono text-accent truncate pr-1">{row.candidato}</span>
-                <span className="text-[10px] sm:text-[12px] font-mono text-text-primary">{row.coef}</span>
-                <span className={`text-[10px] sm:text-[11px] font-medium font-sans px-1.5 sm:px-2 py-0.5 rounded-xs w-fit ${row.ok ? "bg-accent-bg text-accent" : "bg-warning-bg text-warning"}`}>
-                  {row.riesgo}
-                </span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
+        </Reveal>
       </div>
     </section>
   )

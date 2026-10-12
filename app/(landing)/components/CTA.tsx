@@ -1,53 +1,34 @@
-"use client"
-
-import { motion } from "framer-motion"
 import Link from "next/link"
+import { Reveal } from "./Reveal"
 
 export function CTA() {
   return (
-    <section className="py-16 sm:py-24 px-4 sm:px-6 bg-text-primary border-t border-white/10">
-      <div className="max-w-inner mx-auto text-center">
-        <motion.h2
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-[clamp(24px,4vw,40px)] font-medium text-white leading-[1.15] mb-4 font-sans"
-        >
-          ¿Listo para dejar el Excel?
-        </motion.h2>
-
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.08 }}
-          className="text-[14px] text-white/50 font-sans mb-8 sm:mb-10 max-w-md mx-auto"
-        >
-          Únase a los refugios que ya gestionan su colonia con rigor científico y cumplimiento legal automático.
-        </motion.p>
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.14 }}
-          className="flex flex-col sm:flex-row gap-3 justify-center"
-        >
+    <section className="border-t-[0.5px] border-border px-4 py-16 sm:px-6 sm:py-24">
+      <Reveal className="mx-auto flex max-w-inner flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <h2 className="max-w-[560px] text-balance text-[clamp(28px,4.2vw,44px)] font-medium leading-[1.1] text-text-primary">
+            Empieza por registrar a tu colonia.
+          </h2>
+          <p className="mt-4 max-w-[460px] text-body-l text-text-secondary">
+            Crea tu cuenta y carga tus primeros ejemplares. Si prefieres que alguien te acompañe,
+            escríbenos.
+          </p>
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
           <Link
             href="/auth/register"
-            className="inline-flex items-center justify-center h-10 px-6 text-[13px] font-medium font-sans bg-accent text-accent-text hover:bg-accent-hover rounded-sm transition-all duration-150 active:scale-[0.98]"
+            className="inline-flex h-11 items-center justify-center rounded-sm bg-accent px-6 text-[13px] font-medium text-accent-text transition-colors duration-150 hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg-app"
           >
-            Crear cuenta gratis
+            Crear cuenta
           </Link>
-          <Link
-            href="mailto:hola@amoxtli.tech"
-            className="inline-flex items-center justify-center h-10 px-6 text-[13px] font-medium font-sans bg-transparent text-white border border-white/20 hover:bg-white/5 rounded-sm transition-all duration-150 active:scale-[0.98]"
+          <a
+            href="mailto:hello@amoxtli.tech"
+            className="inline-flex h-11 items-center justify-center px-1 text-[13px] font-medium text-text-primary underline decoration-border underline-offset-4 transition-colors duration-150 hover:decoration-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg-app"
           >
-            Hablar con el equipo
-          </Link>
-        </motion.div>
-      </div>
+            Escríbenos
+          </a>
+        </div>
+      </Reveal>
     </section>
   )
 }

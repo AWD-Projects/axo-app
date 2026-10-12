@@ -5,6 +5,25 @@ export const alt = "Axo — El sistema operativo de tu refugio de ajolote"
 export const size = { width: 1200, height: 630 }
 export const contentType = "image/png"
 
+const pill = (label: string, active = false) => (
+  <div
+    style={{
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      height: "56px",
+      width: "132px",
+      borderRadius: "28px",
+      border: `2px solid ${active ? "#1a6560" : "#e5e2dc"}`,
+      background: active ? "#e2f0ee" : "#ffffff",
+      color: active ? "#1a6560" : "#3c3a36",
+      fontSize: "26px",
+    }}
+  >
+    {label}
+  </div>
+)
+
 export default function OGImage() {
   return new ImageResponse(
     (
@@ -15,96 +34,36 @@ export default function OGImage() {
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          alignItems: "flex-start",
-          justifyContent: "flex-end",
+          justifyContent: "space-between",
           padding: "80px",
           fontFamily: "sans-serif",
         }}
       >
-        {/* Brand mark */}
-        <div
-          style={{
-            position: "absolute",
-            top: "80px",
-            left: "80px",
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-          }}
-        >
-          <div
-            style={{
-              width: "40px",
-              height: "40px",
-              background: "#1a1a1a",
-              borderRadius: "10px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <span style={{ color: "#f9f9f7", fontSize: "20px", fontWeight: "700" }}>A</span>
-          </div>
-          <span style={{ fontSize: "22px", fontWeight: "600", color: "#1a1a1a" }}>axo</span>
+        <div style={{ display: "flex", fontSize: "40px", fontWeight: 600, letterSpacing: "4px", color: "#0d0d0d" }}>
+          AXO
         </div>
 
-        {/* Decorative axolotl silhouette area */}
-        <div
-          style={{
-            position: "absolute",
-            right: "80px",
-            top: "50%",
-            transform: "translateY(-50%)",
-            width: "380px",
-            height: "380px",
-            background: "linear-gradient(135deg, #e8f4f0 0%, #d4ede6 100%)",
-            borderRadius: "50%",
-            opacity: 0.6,
-          }}
-        />
-
-        {/* Main content */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "640px", zIndex: 1 }}>
+        <div style={{ display: "flex", flexDirection: "column" }}>
           <div
             style={{
               display: "flex",
-              background: "#e8f4f0",
-              borderRadius: "8px",
-              padding: "6px 14px",
-              width: "fit-content",
-            }}
-          >
-            <span style={{ fontSize: "14px", color: "#2d7a5f", fontWeight: "600" }}>
-              Ambystoma mexicanum · Gestión UMA
-            </span>
-          </div>
-          <span
-            style={{
-              fontSize: "52px",
-              fontWeight: "700",
-              color: "#0d0d0d",
+              fontSize: "68px",
               lineHeight: 1.1,
-              letterSpacing: "-1px",
+              fontWeight: 600,
+              color: "#0d0d0d",
+              maxWidth: "980px",
             }}
           >
-            El sistema operativo de tu refugio de ajolote
-          </span>
-          <span style={{ fontSize: "20px", color: "#555", lineHeight: 1.5 }}>
-            Registros operativos · Trazabilidad genealógica · Reportes SEMARNAT
-          </span>
-        </div>
-
-        {/* Bottom brand */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: "48px",
-            right: "80px",
-            fontSize: "15px",
-            color: "#999",
-          }}
-        >
-          axo.amoxtli.tech
+            Sabe qué tan emparentada está una cruza antes de hacerla.
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "20px", marginTop: "48px" }}>
+            {pill("A-11", true)}
+            <div style={{ display: "flex", fontSize: "30px", color: "#3c3a36" }}>×</div>
+            {pill("A-12", true)}
+            <div style={{ display: "flex", fontSize: "30px", color: "#3c3a36", marginLeft: "12px" }}>
+              coeficiente 0.250
+            </div>
+          </div>
         </div>
       </div>
     ),
